@@ -1,0 +1,69 @@
+From 9898223509206fb1809eab3028a45d270f6a2497 Mon Sep 17 00:00:00 2001
+From: MikeBeaton <mjsbeaton@gmail.com>
+Date: Sat, 20 Feb 2021 09:46:42 +0000
+Subject: [PATCH] Patch OC build tools
+
+---
+ build_oc.tool  |  3 +++
+ rebuild_all.sh | 14 ++++++++++++++
+ rebuild_oc.sh  | 13 +++++++++++++
+ 3 files changed, 30 insertions(+)
+ create mode 100755 rebuild_all.sh
+ create mode 100755 rebuild_oc.sh
+
+diff --git a/build_oc.tool b/build_oc.tool
+index 9c682f38..cc92e966 100755
+--- a/build_oc.tool
++++ b/build_oc.tool
+@@ -246,6 +246,9 @@ package() {
+   popd || exit 1
+ }
+ 
++ARCHS=(X64)
++TARGETS=(DEBUG)
++
+ cd "$(dirname "$0")" || exit 1
+ if [ "$ARCHS" = "" ]; then
+   ARCHS=(X64 IA32)
+diff --git a/rebuild_all.sh b/rebuild_all.sh
+new file mode 100755
+index 00000000..1bb8cdc1
+--- /dev/null
++++ b/rebuild_all.sh
+@@ -0,0 +1,14 @@
++#!/bin/bash
++
++rm ./UDK/Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCore-0.6.7-DEBUG.zip
++
++./build_oc.tool
++
++rm ~/OC/OpenCore-0.6.7-DEBUG.zip
++rm -rf ~/OC/OpenCore-0.6.7-DEBUG
++
++cp ./UDK/Build/OpenCorePkg/DEBUG_XCODE5/X64/*.zip ~/OC
++
++unzip ~/OC/OpenCore-0.6.7-DEBUG.zip -d ~/OC/OpenCore-0.6.7-DEBUG
++
++cp -r ~/OC/OpenCore-0.6.7-DEBUG/X64/EFI /Volumes/OPENCORE
+diff --git a/rebuild_oc.sh b/rebuild_oc.sh
+new file mode 100755
+index 00000000..f57c1499
+--- /dev/null
++++ b/rebuild_oc.sh
+@@ -0,0 +1,13 @@
++#!/bin/bash
++
++rm /Volumes/OPENCORE/EFI/BOOT/BOOTx64.efi
++rm /Volumes/OPENCORE/EFI/OC/OpenCore.efi
++rm /Volumes/OPENCORE/EFI/OC/Drivers/OpenCanopy.efi
++
++cd ./UDK
++source edksetup.sh
++build -a X64 -b DEBUG -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc
++
++cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/Bootstrap.efi /Volumes/OPENCORE/EFI/BOOT/BOOTx64.efi
++cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCore.efi /Volumes/OPENCORE/EFI/OC
++cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCanopy.efi /Volumes/OPENCORE/EFI/OC/Drivers
+-- 
+2.27.0
+
