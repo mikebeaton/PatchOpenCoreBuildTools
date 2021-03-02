@@ -35,7 +35,7 @@ index 00000000..72855eb3
 +
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
-+OC_VER="0.6.7"
++OC_VER="0.6.8"
 +OC_VOLUME_DIR="/Volumes/OPENCORE"
 +BUILD_DIR="./UDK/Build/OpenCorePkg/DEBUG_XCODE5/X64"
 +
@@ -83,7 +83,7 @@ index 00000000..f2d39f11
 +
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
-+OC_VER="0.6.7"
++OC_VER="0.6.8"
 +OC_VOLUME_DIR="/Volumes/OPENCORE"
 +
 +BASE=OpenCore-${OC_VER}-DEBUG
