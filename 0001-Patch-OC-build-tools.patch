@@ -1,21 +1,21 @@
-From 9898223509206fb1809eab3028a45d270f6a2497 Mon Sep 17 00:00:00 2001
+From 614f140b50cd0e529538d7fe04733ff7c58632bb Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Sat, 20 Feb 2021 09:46:42 +0000
+Date: Tue, 2 Mar 2021 08:39:20 +0000
 Subject: [PATCH] Patch OC build tools
 
 ---
  build_oc.tool  |  3 +++
- rebuild_all.sh | 14 ++++++++++++++
- rebuild_oc.sh  | 13 +++++++++++++
- 3 files changed, 30 insertions(+)
+ rebuild_all.sh | 42 ++++++++++++++++++++++++++++++++++++++++
+ rebuild_oc.sh  | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 97 insertions(+)
  create mode 100755 rebuild_all.sh
  create mode 100755 rebuild_oc.sh
 
 diff --git a/build_oc.tool b/build_oc.tool
-index 9c682f38..cc92e966 100755
+index e5b171d1..04154f01 100755
 --- a/build_oc.tool
 +++ b/build_oc.tool
-@@ -246,6 +246,9 @@ package() {
+@@ -250,6 +250,9 @@ package() {
    popd || exit 1
  }
  
@@ -27,43 +27,110 @@ index 9c682f38..cc92e966 100755
    ARCHS=(X64 IA32)
 diff --git a/rebuild_all.sh b/rebuild_all.sh
 new file mode 100755
-index 00000000..1bb8cdc1
+index 00000000..72855eb3
 --- /dev/null
 +++ b/rebuild_all.sh
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,42 @@
 +#!/bin/bash
 +
-+rm ./UDK/Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCore-0.6.7-DEBUG.zip
++eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
++OC_VER="0.6.7"
++OC_VOLUME_DIR="/Volumes/OPENCORE"
++BUILD_DIR="./UDK/Build/OpenCorePkg/DEBUG_XCODE5/X64"
++
++BASE=OpenCore-${OC_VER}-DEBUG
++VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
++ZIP_FILE=~/OC/${BASE}.zip
++UNZIP_DIR=~/OC/${BASE}
++
++if [ -f "${BUILD_DIR}/${BASE}.zip" ]; then
++  echo "Removing Build dir ${BASE}.zip..."
++  rm ${BUILD_DIR}/${BASE}.zip
++else
++  echo "Build dir ${BASE}.zip does not exist!"
++fi
++
++echo "Rebuilding..."
 +./build_oc.tool
 +
-+rm ~/OC/OpenCore-0.6.7-DEBUG.zip
-+rm -rf ~/OC/OpenCore-0.6.7-DEBUG
++echo "Removing old local zip..."
++rm ${ZIP_FILE}
 +
-+cp ./UDK/Build/OpenCorePkg/DEBUG_XCODE5/X64/*.zip ~/OC
++echo "Removing old local unzip dir..."
++rm -rf ${UNZIP_DIR}
 +
-+unzip ~/OC/OpenCore-0.6.7-DEBUG.zip -d ~/OC/OpenCore-0.6.7-DEBUG
++echo "Copying new built zip..."
++cp ${BUILD_DIR}/${BASE}.zip ${ZIP_FILE}
 +
-+cp -r ~/OC/OpenCore-0.6.7-DEBUG/X64/EFI /Volumes/OPENCORE
++echo "Making ${MY_BRANCH} copy..."
++cp ${ZIP_FILE} ${VER_ZIP_FILE}
++
++echo "Unzipping..."
++unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null
++
++echo "Copying ${MY_BRANCH} branch files to ${OC_VOLUME_DIR}..."
++cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR}
++
++echo "Done."
 diff --git a/rebuild_oc.sh b/rebuild_oc.sh
 new file mode 100755
-index 00000000..f57c1499
+index 00000000..f2d39f11
 --- /dev/null
 +++ b/rebuild_oc.sh
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,52 @@
 +#!/bin/bash
 +
-+rm /Volumes/OPENCORE/EFI/BOOT/BOOTx64.efi
-+rm /Volumes/OPENCORE/EFI/OC/OpenCore.efi
-+rm /Volumes/OPENCORE/EFI/OC/Drivers/OpenCanopy.efi
++eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
++OC_VER="0.6.7"
++OC_VOLUME_DIR="/Volumes/OPENCORE"
++
++BASE=OpenCore-${OC_VER}-DEBUG
++VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
++ZIP_FILE=~/OC/${BASE}.zip
++UNZIP_DIR=~/OC/${BASE}
++
++if [ ! -f $VER_ZIP_FILE ]; then
++  echo "Cannot find ${VER_ZIP_FILE} - try rebuild_all.sh"
++  exit -1
++fi
++
++if diff -q ${VER_ZIP_FILE} ${ZIP_FILE} &>/dev/null; then
++  >&2 echo "Zip is correct for ${MY_BRANCH}."
++else
++  >&2 echo "Removing different branch unzipped files..."
++  rm -rf $UNZIP_DIR
++
++  echo "Copying zip file for ${MY_BRANCH} branch..."
++  cp ${VER_ZIP_FILE} ${ZIP_FILE}
++
++  echo "Unzipping..."
++  unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null
++
++  echo "Copying ${MY_BRANCH} branch files to ${OC_VOLUME_DIR}..."
++  cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR}
++fi
++
++# remove files we will rebuild
++echo "Removing BOOTx64.efi, OpenCore.efi, OpenCanopy.efi..."
++rm ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
++rm ${OC_VOLUME_DIR}/EFI/OC/OpenCore.efi
++rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenCanopy.efi
++
++# rebuild them
++echo "Rebuilding..."
 +cd ./UDK
 +source edksetup.sh
 +build -a X64 -b DEBUG -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc
 +
-+cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/Bootstrap.efi /Volumes/OPENCORE/EFI/BOOT/BOOTx64.efi
-+cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCore.efi /Volumes/OPENCORE/EFI/OC
-+cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCanopy.efi /Volumes/OPENCORE/EFI/OC/Drivers
++# put them back
++echo "Copying new BOOTx64.efi, OpenCore.efi, OpenCanopy.efi..."
++cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/Bootstrap.efi ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
++cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCore.efi ${OC_VOLUME_DIR}/EFI/OC
++cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCanopy.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
++
++echo "Done."
 -- 
 2.27.0
 
