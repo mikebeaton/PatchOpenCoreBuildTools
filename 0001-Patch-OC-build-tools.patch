@@ -1,13 +1,13 @@
-From 614f140b50cd0e529538d7fe04733ff7c58632bb Mon Sep 17 00:00:00 2001
+From 76368ac7ffa2c946bff53ab0e3bb7c7d26b3c458 Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Tue, 2 Mar 2021 08:39:20 +0000
+Date: Thu, 4 Mar 2021 16:13:42 +0000
 Subject: [PATCH] Patch OC build tools
 
 ---
  build_oc.tool  |  3 +++
- rebuild_all.sh | 42 ++++++++++++++++++++++++++++++++++++++++
- rebuild_oc.sh  | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 97 insertions(+)
+ rebuild_all.sh | 57 ++++++++++++++++++++++++++++++++++++++++++++
+ rebuild_oc.sh  | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 124 insertions(+)
  create mode 100755 rebuild_all.sh
  create mode 100755 rebuild_oc.sh
 
@@ -27,19 +27,29 @@ index e5b171d1..04154f01 100755
    ARCHS=(X64 IA32)
 diff --git a/rebuild_all.sh b/rebuild_all.sh
 new file mode 100755
-index 00000000..72855eb3
+index 00000000..012c37b6
 --- /dev/null
 +++ b/rebuild_all.sh
-@@ -0,0 +1,42 @@
+@@ -0,0 +1,57 @@
 +#!/bin/bash
 +
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
-+OC_VER="0.6.8"
-+OC_VOLUME_DIR="/Volumes/OPENCORE"
-+BUILD_DIR="./UDK/Build/OpenCorePkg/DEBUG_XCODE5/X64"
++if [ "$MY_BRANCH" = "" ]; then
++  eval "$(git status | grep "HEAD detached at" | awk -F '[ ]' '{print "MY_BRANCH=" $4}')"
++  if [ "$MY_BRANCH" = "" ]; then
++    echo "Not on any git branch or tag!"
++    exit -1
++  fi
++fi
 +
-+BASE=OpenCore-${OC_VER}-DEBUG
++TARGET=DEBUG
++OC_VER="0.6.7"
++
++OC_VOLUME_DIR="/Volumes/OPENCORE"
++BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
++
++BASE=OpenCore-${OC_VER}-${TARGET}
 +VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
 +ZIP_FILE=~/OC/${BASE}.zip
 +UNZIP_DIR=~/OC/${BASE}
@@ -54,6 +64,11 @@ index 00000000..72855eb3
 +echo "Rebuilding..."
 +./build_oc.tool
 +
++if [ ! -f ${BUILD_DIR}/${BASE}.zip ] ; then
++  echo "${BUILD_DIR}/${BASE}.zip does not exist."
++  exit -1
++fi
++
 +echo "Removing old local zip..."
 +rm ${ZIP_FILE}
 +
@@ -63,30 +78,41 @@ index 00000000..72855eb3
 +echo "Copying new built zip..."
 +cp ${BUILD_DIR}/${BASE}.zip ${ZIP_FILE}
 +
-+echo "Making ${MY_BRANCH} copy..."
++echo "Making ${MY_BRANCH} copy of zip file..."
 +cp ${ZIP_FILE} ${VER_ZIP_FILE}
 +
 +echo "Unzipping..."
 +unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null
 +
-+echo "Copying ${MY_BRANCH} branch files to ${OC_VOLUME_DIR}..."
++echo "Copying ${MY_BRANCH} ${TARGET} files to ${OC_VOLUME_DIR}..."
 +cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR}
 +
 +echo "Done."
 diff --git a/rebuild_oc.sh b/rebuild_oc.sh
 new file mode 100755
-index 00000000..f2d39f11
+index 00000000..6b24c78c
 --- /dev/null
 +++ b/rebuild_oc.sh
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,64 @@
 +#!/bin/bash
 +
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
-+OC_VER="0.6.8"
-+OC_VOLUME_DIR="/Volumes/OPENCORE"
++if [ "$MY_BRANCH" = "" ]; then
++  eval "$(git status | grep "HEAD detached at" | awk -F '[ ]' '{print "MY_BRANCH=" $4}')"
++  if [ "$MY_BRANCH" = "" ]; then
++    echo "Not on any git branch or tag!"
++    exit -1
++  fi
++fi
 +
-+BASE=OpenCore-${OC_VER}-DEBUG
++TARGET=RELEASE
++OC_VER="0.6.7"
++
++OC_VOLUME_DIR="/Volumes/OPENCORE"
++BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
++
++BASE=OpenCore-${OC_VER}-${TARGET}
 +VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
 +ZIP_FILE=~/OC/${BASE}.zip
 +UNZIP_DIR=~/OC/${BASE}
@@ -97,18 +123,18 @@ index 00000000..f2d39f11
 +fi
 +
 +if diff -q ${VER_ZIP_FILE} ${ZIP_FILE} &>/dev/null; then
-+  >&2 echo "Zip is correct for ${MY_BRANCH}."
++  >&2 echo "Zip is correct for ${MY_BRANCH} ${TARGET}."
 +else
 +  >&2 echo "Removing different branch unzipped files..."
 +  rm -rf $UNZIP_DIR
 +
-+  echo "Copying zip file for ${MY_BRANCH} branch..."
++  echo "Copying zip file for ${MY_BRANCH} ${TARGET}..."
 +  cp ${VER_ZIP_FILE} ${ZIP_FILE}
 +
 +  echo "Unzipping..."
 +  unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null
 +
-+  echo "Copying ${MY_BRANCH} branch files to ${OC_VOLUME_DIR}..."
++  echo "Copying ${MY_BRANCH} ${TARGET} files to ${OC_VOLUME_DIR}..."
 +  cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR}
 +fi
 +
@@ -122,13 +148,14 @@ index 00000000..f2d39f11
 +echo "Rebuilding..."
 +cd ./UDK
 +source edksetup.sh
-+build -a X64 -b DEBUG -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc
++build -a X64 -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc
++cd ..
 +
 +# put them back
-+echo "Copying new BOOTx64.efi, OpenCore.efi, OpenCanopy.efi..."
-+cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/Bootstrap.efi ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
-+cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCore.efi ${OC_VOLUME_DIR}/EFI/OC
-+cp ./Build/OpenCorePkg/DEBUG_XCODE5/X64/OpenCanopy.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
++echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi..."
++cp ${BUILD_DIR}/Bootstrap.efi ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
++cp ${BUILD_DIR}/OpenCore.efi ${OC_VOLUME_DIR}/EFI/OC
++cp ${BUILD_DIR}/OpenCanopy.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
 +
 +echo "Done."
 -- 
