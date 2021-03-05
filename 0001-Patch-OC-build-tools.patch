@@ -44,7 +44,7 @@ index 00000000..012c37b6
 +fi
 +
 +TARGET=DEBUG
-+OC_VER="0.6.7"
++OC_VER="0.6.8"
 +
 +OC_VOLUME_DIR="/Volumes/OPENCORE"
 +BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
@@ -106,8 +106,8 @@ index 00000000..6b24c78c
 +  fi
 +fi
 +
-+TARGET=RELEASE
-+OC_VER="0.6.7"
++TARGET=DEBUG
++OC_VER="0.6.8"
 +
 +OC_VOLUME_DIR="/Volumes/OPENCORE"
 +BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
