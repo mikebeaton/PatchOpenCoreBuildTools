@@ -1,21 +1,21 @@
-From ebe76f71d51a74e4b62ff24c462b6ff0a95f01bc Mon Sep 17 00:00:00 2001
+From 082c3a2a1149a8ca3cf30c46e333beba42f89e8d Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Tue, 9 Mar 2021 14:46:49 +0000
+Date: Tue, 9 Mar 2021 15:23:42 +0000
 Subject: [PATCH] Patch OC build tools
 
 ---
- rebuild_all.sh | 76 ++++++++++++++++++++++++++++++++++++++++++++++
+ rebuild_all.sh | 78 ++++++++++++++++++++++++++++++++++++++++++++++++
  rebuild_oc.sh  | 81 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 157 insertions(+)
+ 2 files changed, 159 insertions(+)
  create mode 100755 rebuild_all.sh
  create mode 100755 rebuild_oc.sh
 
 diff --git a/rebuild_all.sh b/rebuild_all.sh
 new file mode 100755
-index 00000000..f641c906
+index 00000000..00a9f438
 --- /dev/null
 +++ b/rebuild_all.sh
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,78 @@
 +#!/bin/bash
 +
 +TARGET=DEBUG
@@ -65,12 +65,14 @@ index 00000000..f641c906
 +  echo "Rebuilding..."
 +  ARCHS=(X64)
 +  TARGETS=(${TARGET})
++  pushd .
 +  source ./build_oc.tool
++  popd 1>/dev/null
++fi
 +
-+  if [ ! -f ${BUILD_DIR}/${BASE}.zip ] ; then
-+    echo "${BUILD_DIR}/${BASE}.zip does not exist."
-+    exit -1
-+  fi
++if [ ! -f ${BUILD_DIR}/${BASE}.zip ] ; then
++  echo "ERROR: Built push ${BUILD_DIR}/${BASE}.zip does not exist."
++  exit -1
 +fi
 +
 +echo "Removing old local ${TARGET} zip..."
