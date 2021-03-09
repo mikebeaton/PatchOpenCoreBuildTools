@@ -1,20 +1,22 @@
-From 082c3a2a1149a8ca3cf30c46e333beba42f89e8d Mon Sep 17 00:00:00 2001
+From c1108b22447e835bac9f322cc7385ce3200f2d9c Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Tue, 9 Mar 2021 15:23:42 +0000
+Date: Tue, 9 Mar 2021 22:27:31 +0000
 Subject: [PATCH] Patch OC build tools
 
 ---
- rebuild_all.sh | 78 ++++++++++++++++++++++++++++++++++++++++++++++++
- rebuild_oc.sh  | 81 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 159 insertions(+)
- create mode 100755 rebuild_all.sh
- create mode 100755 rebuild_oc.sh
+ rebuild_all.tool  | 78 +++++++++++++++++++++++++++++++++++++++++++++
+ rebuild_both.tool |  5 +++
+ rebuild_oc.tool   | 81 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 164 insertions(+)
+ create mode 100755 rebuild_all.tool
+ create mode 100755 rebuild_both.tool
+ create mode 100755 rebuild_oc.tool
 
-diff --git a/rebuild_all.sh b/rebuild_all.sh
+diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
 index 00000000..00a9f438
 --- /dev/null
-+++ b/rebuild_all.sh
++++ b/rebuild_all.tool
 @@ -0,0 +1,78 @@
 +#!/bin/bash
 +
@@ -94,11 +96,22 @@ index 00000000..00a9f438
 +cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR}
 +
 +echo "Done."
-diff --git a/rebuild_oc.sh b/rebuild_oc.sh
+diff --git a/rebuild_both.tool b/rebuild_both.tool
+new file mode 100755
+index 00000000..1c8ac299
+--- /dev/null
++++ b/rebuild_both.tool
+@@ -0,0 +1,5 @@
++#!/bin/bash
++
++ARCHS=(X64)
++TARGETS=(DEBUG RELEASE)
++source ./build_oc.tool
+diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
 index 00000000..9f78de65
 --- /dev/null
-+++ b/rebuild_oc.sh
++++ b/rebuild_oc.tool
 @@ -0,0 +1,81 @@
 +#!/bin/bash
 +
