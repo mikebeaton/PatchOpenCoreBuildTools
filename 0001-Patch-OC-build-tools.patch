@@ -55,10 +55,10 @@ index 00000000..012c37b6
 +UNZIP_DIR=~/OC/${BASE}
 +
 +if [ -f "${BUILD_DIR}/${BASE}.zip" ]; then
-+  echo "Removing Build dir ${BASE}.zip..."
++  echo "Removing Build file ${BASE}.zip..."
 +  rm ${BUILD_DIR}/${BASE}.zip
 +else
-+  echo "Build dir ${BASE}.zip does not exist!"
++  echo "Build file ${BASE}.zip does not exist!"
 +fi
 +
 +echo "Rebuilding..."
