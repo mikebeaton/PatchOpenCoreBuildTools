@@ -1,37 +1,40 @@
-From 76368ac7ffa2c946bff53ab0e3bb7c7d26b3c458 Mon Sep 17 00:00:00 2001
+From ebe76f71d51a74e4b62ff24c462b6ff0a95f01bc Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Thu, 4 Mar 2021 16:13:42 +0000
+Date: Tue, 9 Mar 2021 14:46:49 +0000
 Subject: [PATCH] Patch OC build tools
 
 ---
- build_oc.tool  |  3 +++
- rebuild_all.sh | 57 ++++++++++++++++++++++++++++++++++++++++++++
- rebuild_oc.sh  | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 124 insertions(+)
+ rebuild_all.sh | 76 ++++++++++++++++++++++++++++++++++++++++++++++
+ rebuild_oc.sh  | 81 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 157 insertions(+)
  create mode 100755 rebuild_all.sh
  create mode 100755 rebuild_oc.sh
 
-diff --git a/build_oc.tool b/build_oc.tool
-index e5b171d1..04154f01 100755
---- a/build_oc.tool
-+++ b/build_oc.tool
-@@ -250,6 +250,9 @@ package() {
-   popd || exit 1
- }
- 
-+ARCHS=(X64)
-+TARGETS=(DEBUG)
-+
- cd "$(dirname "$0")" || exit 1
- if [ "$ARCHS" = "" ]; then
-   ARCHS=(X64 IA32)
 diff --git a/rebuild_all.sh b/rebuild_all.sh
 new file mode 100755
-index 00000000..012c37b6
+index 00000000..f641c906
 --- /dev/null
 +++ b/rebuild_all.sh
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,76 @@
 +#!/bin/bash
++
++TARGET=DEBUG
++OC_VER="0.6.8"
++
++SKIP_BUILD=0
++
++while true; do
++  if [ "$1" == "--skip-build" ] || [ "$1" == "-s" ]; then
++    SKIP_BUILD=1
++    shift
++  else
++    break
++  fi
++done
++
++if [ "$1" != "" ]; then
++  TARGET=$1
++fi
 +
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
@@ -43,9 +46,6 @@ index 00000000..012c37b6
 +  fi
 +fi
 +
-+TARGET=DEBUG
-+OC_VER="0.6.8"
-+
 +OC_VOLUME_DIR="/Volumes/OPENCORE"
 +BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
 +
@@ -54,22 +54,26 @@ index 00000000..012c37b6
 +ZIP_FILE=~/OC/${BASE}.zip
 +UNZIP_DIR=~/OC/${BASE}
 +
-+if [ -f "${BUILD_DIR}/${BASE}.zip" ]; then
-+  echo "Removing Build file ${BASE}.zip..."
-+  rm ${BUILD_DIR}/${BASE}.zip
-+else
-+  echo "Build file ${BASE}.zip does not exist!"
++if [ "$SKIP_BUILD" != "1" ]; then
++  if [ -f "${BUILD_DIR}/${BASE}.zip" ]; then
++    echo "Removing Build file ${BASE}.zip..."
++    rm ${BUILD_DIR}/${BASE}.zip
++  else
++    echo "Build file ${BASE}.zip does not exist!"
++  fi
++
++  echo "Rebuilding..."
++  ARCHS=(X64)
++  TARGETS=(${TARGET})
++  source ./build_oc.tool
++
++  if [ ! -f ${BUILD_DIR}/${BASE}.zip ] ; then
++    echo "${BUILD_DIR}/${BASE}.zip does not exist."
++    exit -1
++  fi
 +fi
 +
-+echo "Rebuilding..."
-+./build_oc.tool
-+
-+if [ ! -f ${BUILD_DIR}/${BASE}.zip ] ; then
-+  echo "${BUILD_DIR}/${BASE}.zip does not exist."
-+  exit -1
-+fi
-+
-+echo "Removing old local zip..."
++echo "Removing old local ${TARGET} zip..."
 +rm ${ZIP_FILE}
 +
 +echo "Removing old local unzip dir..."
@@ -78,7 +82,7 @@ index 00000000..012c37b6
 +echo "Copying new built zip..."
 +cp ${BUILD_DIR}/${BASE}.zip ${ZIP_FILE}
 +
-+echo "Making ${MY_BRANCH} copy of zip file..."
++echo "Making ${MY_BRANCH} copy of ${TARGET} zip file..."
 +cp ${ZIP_FILE} ${VER_ZIP_FILE}
 +
 +echo "Unzipping..."
@@ -90,11 +94,29 @@ index 00000000..012c37b6
 +echo "Done."
 diff --git a/rebuild_oc.sh b/rebuild_oc.sh
 new file mode 100755
-index 00000000..6b24c78c
+index 00000000..9f78de65
 --- /dev/null
 +++ b/rebuild_oc.sh
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,81 @@
 +#!/bin/bash
++
++TARGET=DEBUG
++OC_VER="0.6.8"
++
++SKIP_BUILD=0
++
++while true; do
++  if [ "$1" == "--skip-build" ] || [ "$1" == "-s" ]; then
++    SKIP_BUILD=1
++    shift
++  else
++    break
++  fi
++done
++
++if [ "$1" != "" ]; then
++  TARGET=$1
++fi
 +
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
@@ -105,9 +127,6 @@ index 00000000..6b24c78c
 +    exit -1
 +  fi
 +fi
-+
-+TARGET=DEBUG
-+OC_VER="0.6.8"
 +
 +OC_VOLUME_DIR="/Volumes/OPENCORE"
 +BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
@@ -144,12 +163,14 @@ index 00000000..6b24c78c
 +rm ${OC_VOLUME_DIR}/EFI/OC/OpenCore.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenCanopy.efi
 +
-+# rebuild them
-+echo "Rebuilding..."
-+cd ./UDK
-+source edksetup.sh
-+build -a X64 -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc
-+cd ..
++if [ "$SKIP_BUILD" != "1" ]; then
++  # rebuild them
++  echo "Rebuilding..."
++  cd ./UDK
++  source edksetup.sh
++  build -a X64 -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc
++  cd ..
++fi
 +
 +# put them back
 +echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi..."
