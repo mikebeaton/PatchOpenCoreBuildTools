@@ -68,7 +68,7 @@ index 00000000..00a9f438
 +  ARCHS=(X64)
 +  TARGETS=(${TARGET})
 +  pushd .
-+  source ./build_oc.tool
++  source ./build_oc.tool --skip-tests
 +  popd 1>/dev/null
 +fi
 +
@@ -182,7 +182,7 @@ index 00000000..9f78de65
 +  # rebuild them
 +  echo "Rebuilding..."
 +  cd ./UDK
-+  source edksetup.sh
++  source edksetup.sh BaseTools
 +  build -a X64 -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc
 +  cd ..
 +fi
