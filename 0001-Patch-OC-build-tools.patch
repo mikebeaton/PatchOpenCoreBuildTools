@@ -1,33 +1,37 @@
-From c1108b22447e835bac9f322cc7385ce3200f2d9c Mon Sep 17 00:00:00 2001
+From ff5519fa3f4b565e9a9120d57f6afe1e71e9a971 Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Tue, 9 Mar 2021 22:27:31 +0000
+Date: Mon, 15 Mar 2021 17:35:20 +0000
 Subject: [PATCH] Patch OC build tools
 
 ---
- rebuild_all.tool  | 78 +++++++++++++++++++++++++++++++++++++++++++++
+ rebuild_all.tool  | 81 +++++++++++++++++++++++++++++++++++++++++++++
  rebuild_both.tool |  5 +++
- rebuild_oc.tool   | 81 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 164 insertions(+)
+ rebuild_oc.tool   | 84 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 170 insertions(+)
  create mode 100755 rebuild_all.tool
  create mode 100755 rebuild_both.tool
  create mode 100755 rebuild_oc.tool
 
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..00a9f438
+index 00000000..4539075b
 --- /dev/null
 +++ b/rebuild_all.tool
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,81 @@
 +#!/bin/bash
 +
-+TARGET=DEBUG
++TARGET="DEBUG"
 +OC_VER="0.6.8"
++OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
 +
 +while true; do
 +  if [ "$1" == "--skip-build" ] || [ "$1" == "-s" ]; then
 +    SKIP_BUILD=1
++    shift
++  elif [ "$1" == "--ovmf" ] || [ "$1" == "-o" ]; then
++    OC_VOLUME_DIR=~/OPENCORE
 +    shift
 +  else
 +    break
@@ -48,7 +52,6 @@ index 00000000..00a9f438
 +  fi
 +fi
 +
-+OC_VOLUME_DIR="/Volumes/OPENCORE"
 +BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
 +
 +BASE=OpenCore-${OC_VER}-${TARGET}
@@ -109,20 +112,24 @@ index 00000000..1c8ac299
 +source ./build_oc.tool
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..9f78de65
+index 00000000..02bfcd0a
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,84 @@
 +#!/bin/bash
 +
-+TARGET=DEBUG
++TARGET="DEBUG"
 +OC_VER="0.6.8"
++OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
 +
 +while true; do
 +  if [ "$1" == "--skip-build" ] || [ "$1" == "-s" ]; then
 +    SKIP_BUILD=1
++    shift
++  elif [ "$1" == "--ovmf" ] || [ "$1" == "-o" ]; then
++    OC_VOLUME_DIR=~/OPENCORE
 +    shift
 +  else
 +    break
@@ -143,7 +150,6 @@ index 00000000..9f78de65
 +  fi
 +fi
 +
-+OC_VOLUME_DIR="/Volumes/OPENCORE"
 +BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
 +
 +BASE=OpenCore-${OC_VER}-${TARGET}
@@ -173,7 +179,7 @@ index 00000000..9f78de65
 +fi
 +
 +# remove files we will rebuild
-+echo "Removing BOOTx64.efi, OpenCore.efi, OpenCanopy.efi..."
++echo "Removing BOOTx64.efi, OpenCore.efi, OpenCanopy.efi from ${OC_VOLUME_DIR}..."
 +rm ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/OpenCore.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenCanopy.efi
@@ -188,7 +194,7 @@ index 00000000..9f78de65
 +fi
 +
 +# put them back
-+echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi..."
++echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi to ${OC_VOLUME_DIR}..."
 +cp ${BUILD_DIR}/Bootstrap.efi ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
 +cp ${BUILD_DIR}/OpenCore.efi ${OC_VOLUME_DIR}/EFI/OC
 +cp ${BUILD_DIR}/OpenCanopy.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
