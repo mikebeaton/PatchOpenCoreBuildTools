@@ -1,20 +1,18 @@
-From ff5519fa3f4b565e9a9120d57f6afe1e71e9a971 Mon Sep 17 00:00:00 2001
+From 031a7d1471d19ba5c6597d2b29340aae4731cc7a Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Mon, 15 Mar 2021 17:35:20 +0000
+Date: Wed, 31 Mar 2021 08:23:32 +0100
 Subject: [PATCH] Patch OC build tools
 
 ---
- rebuild_all.tool  | 81 +++++++++++++++++++++++++++++++++++++++++++++
- rebuild_both.tool |  5 +++
- rebuild_oc.tool   | 84 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 170 insertions(+)
+ rebuild_all.tool | 81 +++++++++++++++++++++++++++++++++++++++++++
+ rebuild_oc.tool  | 89 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 170 insertions(+)
  create mode 100755 rebuild_all.tool
- create mode 100755 rebuild_both.tool
  create mode 100755 rebuild_oc.tool
 
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..4539075b
+index 00000000..9cf93ab3
 --- /dev/null
 +++ b/rebuild_all.tool
 @@ -0,0 +1,81 @@
@@ -80,42 +78,31 @@ index 00000000..4539075b
 +  exit -1
 +fi
 +
-+echo "Removing old local ${TARGET} zip..."
++echo "Removing old local ${BASE}.zip..."
 +rm ${ZIP_FILE}
 +
-+echo "Removing old local unzip dir..."
++echo "Removing old local unzipped dir..."
 +rm -rf ${UNZIP_DIR}
 +
-+echo "Copying new built zip..."
++echo "Copying ${BASE}.zip from build dir..."
 +cp ${BUILD_DIR}/${BASE}.zip ${ZIP_FILE}
 +
-+echo "Making ${MY_BRANCH} copy of ${TARGET} zip file..."
++echo "Copying ${TARGET} zip to ${BASE}-${MY_BRANCH}.zip..."
 +cp ${ZIP_FILE} ${VER_ZIP_FILE}
 +
-+echo "Unzipping..."
++echo "Unzipping ${BASE}.zip..."
 +unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null
 +
 +echo "Copying ${MY_BRANCH} ${TARGET} files to ${OC_VOLUME_DIR}..."
 +cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR}
 +
 +echo "Done."
-diff --git a/rebuild_both.tool b/rebuild_both.tool
-new file mode 100755
-index 00000000..1c8ac299
---- /dev/null
-+++ b/rebuild_both.tool
-@@ -0,0 +1,5 @@
-+#!/bin/bash
-+
-+ARCHS=(X64)
-+TARGETS=(DEBUG RELEASE)
-+source ./build_oc.tool
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..02bfcd0a
+index 00000000..a9a004ec
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,89 @@
 +#!/bin/bash
 +
 +TARGET="DEBUG"
@@ -158,17 +145,18 @@ index 00000000..02bfcd0a
 +UNZIP_DIR=~/OC/${BASE}
 +
 +if [ ! -f $VER_ZIP_FILE ]; then
-+  echo "Cannot find ${VER_ZIP_FILE} - try rebuild_all.sh"
-+  exit -1
-+fi
-+
-+if diff -q ${VER_ZIP_FILE} ${ZIP_FILE} &>/dev/null; then
++  echo "Cannot find ${VER_ZIP_FILE}, using 'rebuild_all -s' ..."
++  echo
++  ./rebuild_all.tool -s || exit -1
++  echo
++elif diff -q ${VER_ZIP_FILE} ${ZIP_FILE} &>/dev/null; then
 +  >&2 echo "Zip is correct for ${MY_BRANCH} ${TARGET}."
 +else
-+  >&2 echo "Removing different branch unzipped files..."
++  >&2 echo "Zip is not correct for ${MY_BRANCH} ${TARGET}."
++  >&2 echo "Removing non-matching unzipped dir..."
 +  rm -rf $UNZIP_DIR
 +
-+  echo "Copying zip file for ${MY_BRANCH} ${TARGET}..."
++  echo "Copying ${BASE}-${MY_BRANCH}.zip to ${BASE}.zip..."
 +  cp ${VER_ZIP_FILE} ${ZIP_FILE}
 +
 +  echo "Unzipping..."
@@ -179,10 +167,12 @@ index 00000000..02bfcd0a
 +fi
 +
 +# remove files we will rebuild
-+echo "Removing BOOTx64.efi, OpenCore.efi, OpenCanopy.efi from ${OC_VOLUME_DIR}..."
++echo "Removing BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, AudioDxe.efi from ${OC_VOLUME_DIR}..."
 +rm ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/OpenCore.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenCanopy.efi
++rm ${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi
++rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/AudioDxe.efi
 +
 +if [ "$SKIP_BUILD" != "1" ]; then
 +  # rebuild them
@@ -194,10 +184,12 @@ index 00000000..02bfcd0a
 +fi
 +
 +# put them back
-+echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi to ${OC_VOLUME_DIR}..."
++echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, AudioDxe.efi to ${OC_VOLUME_DIR}..."
 +cp ${BUILD_DIR}/Bootstrap.efi ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
 +cp ${BUILD_DIR}/OpenCore.efi ${OC_VOLUME_DIR}/EFI/OC
 +cp ${BUILD_DIR}/OpenCanopy.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
++cp ${BUILD_DIR}/Shell.efi ${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi
++cp ${BUILD_DIR}/AudioDxe.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
 +
 +echo "Done."
 -- 
