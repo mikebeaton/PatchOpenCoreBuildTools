@@ -74,7 +74,7 @@ index 00000000..9cf93ab3
 +fi
 +
 +if [ ! -f ${BUILD_DIR}/${BASE}.zip ] ; then
-+  echo "ERROR: Built push ${BUILD_DIR}/${BASE}.zip does not exist."
++  echo "ERROR: Built ${BUILD_DIR}/${BASE}.zip does not exist."
 +  exit -1
 +fi
 +
