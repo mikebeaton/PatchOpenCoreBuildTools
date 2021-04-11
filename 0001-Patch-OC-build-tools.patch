@@ -19,7 +19,7 @@ index 00000000..9cf93ab3
 +#!/bin/bash
 +
 +TARGET="DEBUG"
-+OC_VER="0.6.8"
++OC_VER="0.6.9"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
@@ -106,7 +106,7 @@ index 00000000..a9a004ec
 +#!/bin/bash
 +
 +TARGET="DEBUG"
-+OC_VER="0.6.8"
++OC_VER="0.6.9"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
