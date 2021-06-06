@@ -193,6 +193,18 @@ index 00000000..9a5a5674
 +cp ${BUILD_DIR}/CsrUtil.efi ${OC_VOLUME_DIR}/EFI/OC/Tools
 +cp ${BUILD_DIR}/AudioDxe.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
 +
++# Mark binaries to be recognisable by OcBootManagementLib.
++bootsig="./Library/OcBootManagementLib/BootSignature.bin"
++efiOCBMs=(
++  "/EFI/BOOT/BOOTx64.efi"
++  "/EFI/OC/OpenCore.efi"
++  )
++for efiOCBM in "${efiOCBMs[@]}"; do
++  echo "Signing ${efiOCBM}..."
++  dd if="${bootsig}" \
++     of="${OC_VOLUME_DIR}${efiOCBM}" seek=64 bs=1 count=64 conv=notrunc || exit 1
++done
++
 +echo "Done."
 -- 
 2.31.1
