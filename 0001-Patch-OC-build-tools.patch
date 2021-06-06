@@ -1,18 +1,18 @@
-From 031a7d1471d19ba5c6597d2b29340aae4731cc7a Mon Sep 17 00:00:00 2001
+From a9fb0e2232ef5ffe65537b67331c1bb792d28eb7 Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Wed, 31 Mar 2021 08:23:32 +0100
+Date: Sun, 6 Jun 2021 23:18:36 +0100
 Subject: [PATCH] Patch OC build tools
 
 ---
- rebuild_all.tool | 81 +++++++++++++++++++++++++++++++++++++++++++
- rebuild_oc.tool  | 89 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 170 insertions(+)
+ rebuild_all.tool |  81 +++++++++++++++++++++++++++++++++++++
+ rebuild_oc.tool  | 103 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 184 insertions(+)
  create mode 100755 rebuild_all.tool
  create mode 100755 rebuild_oc.tool
 
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..9cf93ab3
+index 00000000..46fabe51
 --- /dev/null
 +++ b/rebuild_all.tool
 @@ -0,0 +1,81 @@
@@ -99,10 +99,10 @@ index 00000000..9cf93ab3
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..a9a004ec
+index 00000000..9a5a5674
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,103 @@
 +#!/bin/bash
 +
 +TARGET="DEBUG"
@@ -167,11 +167,12 @@ index 00000000..a9a004ec
 +fi
 +
 +# remove files we will rebuild
-+echo "Removing BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, AudioDxe.efi from ${OC_VOLUME_DIR}..."
++echo "Removing BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, CsrUtil.efi, AudioDxe.efi from ${OC_VOLUME_DIR}..."
 +rm ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/OpenCore.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenCanopy.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi
++rm ${OC_VOLUME_DIR}/EFI/OC/Tools/CsrUtil.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/AudioDxe.efi
 +
 +if [ "$SKIP_BUILD" != "1" ]; then
@@ -184,14 +185,15 @@ index 00000000..a9a004ec
 +fi
 +
 +# put them back
-+echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, AudioDxe.efi to ${OC_VOLUME_DIR}..."
++echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, CsrUtil.efi, AudioDxe.efi to ${OC_VOLUME_DIR}..."
 +cp ${BUILD_DIR}/Bootstrap.efi ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
 +cp ${BUILD_DIR}/OpenCore.efi ${OC_VOLUME_DIR}/EFI/OC
 +cp ${BUILD_DIR}/OpenCanopy.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
 +cp ${BUILD_DIR}/Shell.efi ${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi
++cp ${BUILD_DIR}/CsrUtil.efi ${OC_VOLUME_DIR}/EFI/OC/Tools
 +cp ${BUILD_DIR}/AudioDxe.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
 +
 +echo "Done."
 -- 
-2.27.0
+2.31.1
 
