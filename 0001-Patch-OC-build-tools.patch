@@ -147,7 +147,8 @@ index 00000000..81152260
 +if [ ! -f $VER_ZIP_FILE ]; then
 +  echo "Cannot find ${VER_ZIP_FILE}, using 'rebuild_all -s' ..."
 +  echo
-+  ./rebuild_all.tool -s || exit -1
++  # does not matter if -s is repeated
++  ./rebuild_all.tool -s $@ || exit -1
 +  echo
 +elif diff -q ${VER_ZIP_FILE} ${ZIP_FILE} &>/dev/null; then
 +  >&2 echo "Zip is correct for ${MY_BRANCH} ${TARGET}."
