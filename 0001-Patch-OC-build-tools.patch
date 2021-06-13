@@ -1,25 +1,25 @@
-From a9fb0e2232ef5ffe65537b67331c1bb792d28eb7 Mon Sep 17 00:00:00 2001
+From 6b4878ce88e1f909a3f9e2d5b7fc6cb82e2f9bc0 Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Sun, 6 Jun 2021 23:18:36 +0100
+Date: Sun, 13 Jun 2021 10:43:18 +0100
 Subject: [PATCH] Patch OC build tools
 
 ---
- rebuild_all.tool |  81 +++++++++++++++++++++++++++++++++++++
- rebuild_oc.tool  | 103 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 184 insertions(+)
+ rebuild_all.tool |  81 ++++++++++++++++++++++++++++++++++++
+ rebuild_oc.tool  | 104 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 185 insertions(+)
  create mode 100755 rebuild_all.tool
  create mode 100755 rebuild_oc.tool
 
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..46fabe51
+index 00000000..3f730d81
 --- /dev/null
 +++ b/rebuild_all.tool
 @@ -0,0 +1,81 @@
 +#!/bin/bash
 +
 +TARGET="DEBUG"
-+OC_VER="0.7.0"
++OC_VER="0.7.1"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
@@ -99,14 +99,14 @@ index 00000000..46fabe51
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..9a5a5674
+index 00000000..81152260
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,104 @@
 +#!/bin/bash
 +
 +TARGET="DEBUG"
-+OC_VER="0.7.0"
++OC_VER="0.7.1"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
