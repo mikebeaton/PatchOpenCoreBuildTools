@@ -1,6 +1,6 @@
-From 6b4878ce88e1f909a3f9e2d5b7fc6cb82e2f9bc0 Mon Sep 17 00:00:00 2001
+From 8c82cd32ea9af40d437e2ac795d5bc614cfb95a1 Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Sun, 13 Jun 2021 10:43:18 +0100
+Date: Sat, 3 Jul 2021 16:12:53 +0100
 Subject: [PATCH] Patch OC build tools
 
 ---
@@ -12,7 +12,7 @@ Subject: [PATCH] Patch OC build tools
 
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..3f730d81
+index 00000000..16d390ca
 --- /dev/null
 +++ b/rebuild_all.tool
 @@ -0,0 +1,81 @@
@@ -69,7 +69,7 @@ index 00000000..3f730d81
 +  ARCHS=(X64)
 +  TARGETS=(${TARGET})
 +  pushd .
-+  source ./build_oc.tool --skip-tests
++  source ./build_oc.tool --skip-tests || exit -1
 +  popd 1>/dev/null
 +fi
 +
@@ -99,7 +99,7 @@ index 00000000..3f730d81
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..81152260
+index 00000000..71222c49
 --- /dev/null
 +++ b/rebuild_oc.tool
 @@ -0,0 +1,104 @@
@@ -181,7 +181,7 @@ index 00000000..81152260
 +  echo "Rebuilding..."
 +  cd ./UDK
 +  source edksetup.sh BaseTools
-+  build -a X64 -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc
++  build -a X64 -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc || exit -1
 +  cd ..
 +fi
 +
