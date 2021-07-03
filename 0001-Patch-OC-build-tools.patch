@@ -1,15 +1,26 @@
-From 8c82cd32ea9af40d437e2ac795d5bc614cfb95a1 Mon Sep 17 00:00:00 2001
+From 368db31e36f34800c934c7476b5c459b6c77ca34 Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Sat, 3 Jul 2021 16:12:53 +0100
+Date: Sat, 3 Jul 2021 16:15:21 +0100
 Subject: [PATCH] Patch OC build tools
 
 ---
+ kill_build.tool  |   3 ++
  rebuild_all.tool |  81 ++++++++++++++++++++++++++++++++++++
  rebuild_oc.tool  | 104 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 185 insertions(+)
+ 3 files changed, 188 insertions(+)
+ create mode 100755 kill_build.tool
  create mode 100755 rebuild_all.tool
  create mode 100755 rebuild_oc.tool
 
+diff --git a/kill_build.tool b/kill_build.tool
+new file mode 100755
+index 00000000..02187e06
+--- /dev/null
++++ b/kill_build.tool
+@@ -0,0 +1,3 @@
++#!/bin/bash
++
++ps -a | grep build | grep -v "$0" | grep -v "grep" | awk '{print $1}' | xargs kill -9
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
 index 00000000..16d390ca
