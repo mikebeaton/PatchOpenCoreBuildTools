@@ -1,13 +1,13 @@
-From 368db31e36f34800c934c7476b5c459b6c77ca34 Mon Sep 17 00:00:00 2001
+From 37fecfac2ef634afd4774d2cb9fce348b79649f9 Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Sat, 3 Jul 2021 16:15:21 +0100
+Date: Sun, 15 Aug 2021 17:32:32 +0100
 Subject: [PATCH] Patch OC build tools
 
 ---
  kill_build.tool  |   3 ++
- rebuild_all.tool |  81 ++++++++++++++++++++++++++++++++++++
- rebuild_oc.tool  | 104 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 188 insertions(+)
+ rebuild_all.tool |  94 +++++++++++++++++++++++++++++++++++++
+ rebuild_oc.tool  | 119 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 216 insertions(+)
  create mode 100755 kill_build.tool
  create mode 100755 rebuild_all.tool
  create mode 100755 rebuild_oc.tool
@@ -23,14 +23,14 @@ index 00000000..02187e06
 +ps -a | grep build | grep -v "$0" | grep -v "grep" | awk '{print $1}' | xargs kill -9
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..16d390ca
+index 00000000..5379a3bf
 --- /dev/null
 +++ b/rebuild_all.tool
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,94 @@
 +#!/bin/bash
 +
 +TARGET="DEBUG"
-+OC_VER="0.7.1"
++OC_VER="0.7.2"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
@@ -41,11 +41,24 @@ index 00000000..16d390ca
 +    shift
 +  elif [ "$1" == "--ovmf" ] || [ "$1" == "-o" ]; then
 +    OC_VOLUME_DIR=~/OPENCORE
++    TARGET="NOOPT"
 +    shift
++  elif [ "$1" == "--dir" ] || [ "$1" == "-d" ]; then
++    shift
++    if [ "$1" != "" ]; then
++      OC_VOLUME_DIR=$1
++      shift
++    else
++      echo "No output dir specified" && exit 1
++    fi
 +  else
 +    break
 +  fi
 +done
++
++if ! [ -d $OC_VOLUME_DIR ]; then
++  echo "Target dir ${OC_VOLUME_DIR} does not exist" && exit 1
++fi
 +
 +if [ "$1" != "" ]; then
 +  TARGET=$1
@@ -57,7 +70,7 @@ index 00000000..16d390ca
 +  eval "$(git status | grep "HEAD detached at" | awk -F '[ ]' '{print "MY_BRANCH=" $4}')"
 +  if [ "$MY_BRANCH" = "" ]; then
 +    echo "Not on any git branch or tag!"
-+    exit -1
++    exit 1
 +  fi
 +fi
 +
@@ -80,13 +93,13 @@ index 00000000..16d390ca
 +  ARCHS=(X64)
 +  TARGETS=(${TARGET})
 +  pushd .
-+  source ./build_oc.tool --skip-tests || exit -1
++  source ./build_oc.tool --skip-tests || exit 1
 +  popd 1>/dev/null
 +fi
 +
 +if [ ! -f ${BUILD_DIR}/${BASE}.zip ] ; then
 +  echo "ERROR: Built ${BUILD_DIR}/${BASE}.zip does not exist."
-+  exit -1
++  exit 1
 +fi
 +
 +echo "Removing old local ${BASE}.zip..."
@@ -96,28 +109,28 @@ index 00000000..16d390ca
 +rm -rf ${UNZIP_DIR}
 +
 +echo "Copying ${BASE}.zip from build dir..."
-+cp ${BUILD_DIR}/${BASE}.zip ${ZIP_FILE}
++cp ${BUILD_DIR}/${BASE}.zip ${ZIP_FILE} || exit 1
 +
 +echo "Copying ${TARGET} zip to ${BASE}-${MY_BRANCH}.zip..."
-+cp ${ZIP_FILE} ${VER_ZIP_FILE}
++cp ${ZIP_FILE} ${VER_ZIP_FILE} || exit 1
 +
 +echo "Unzipping ${BASE}.zip..."
-+unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null
++unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null || exit 1
 +
 +echo "Copying ${MY_BRANCH} ${TARGET} files to ${OC_VOLUME_DIR}..."
-+cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR}
++cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR} || exit 1
 +
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..71222c49
+index 00000000..a70552a3
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,104 @@
+@@ -0,0 +1,119 @@
 +#!/bin/bash
 +
 +TARGET="DEBUG"
-+OC_VER="0.7.1"
++OC_VER="0.7.2"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
@@ -128,11 +141,24 @@ index 00000000..71222c49
 +    shift
 +  elif [ "$1" == "--ovmf" ] || [ "$1" == "-o" ]; then
 +    OC_VOLUME_DIR=~/OPENCORE
++    TARGET="NOOPT"
 +    shift
++  elif [ "$1" == "--dir" ] || [ "$1" == "-d" ]; then
++    shift
++    if [ "$1" != "" ]; then
++      OC_VOLUME_DIR=$1
++      shift
++    else
++      echo "No output dir specified" && exit 1
++    fi
 +  else
 +    break
 +  fi
 +done
++
++if ! [ -d $OC_VOLUME_DIR ]; then
++  echo "Target dir ${OC_VOLUME_DIR} does not exist" && exit 1
++fi
 +
 +if [ "$1" != "" ]; then
 +  TARGET=$1
@@ -144,7 +170,7 @@ index 00000000..71222c49
 +  eval "$(git status | grep "HEAD detached at" | awk -F '[ ]' '{print "MY_BRANCH=" $4}')"
 +  if [ "$MY_BRANCH" = "" ]; then
 +    echo "Not on any git branch or tag!"
-+    exit -1
++    exit 1
 +  fi
 +fi
 +
@@ -159,51 +185,53 @@ index 00000000..71222c49
 +  echo "Cannot find ${VER_ZIP_FILE}, using 'rebuild_all -s' ..."
 +  echo
 +  # does not matter if -s is repeated
-+  ./rebuild_all.tool -s $@ || exit -1
++  ./rebuild_all.tool -s $@ || exit 1
 +  echo
 +elif diff -q ${VER_ZIP_FILE} ${ZIP_FILE} &>/dev/null; then
 +  >&2 echo "Zip is correct for ${MY_BRANCH} ${TARGET}."
 +else
 +  >&2 echo "Zip is not correct for ${MY_BRANCH} ${TARGET}."
 +  >&2 echo "Removing non-matching unzipped dir..."
-+  rm -rf $UNZIP_DIR
++  rm -rf $UNZIP_DIR || exit 1
 +
 +  echo "Copying ${BASE}-${MY_BRANCH}.zip to ${BASE}.zip..."
-+  cp ${VER_ZIP_FILE} ${ZIP_FILE}
++  cp ${VER_ZIP_FILE} ${ZIP_FILE} || exit 1
 +
 +  echo "Unzipping..."
-+  unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null
++  unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null || exit 1
 +
 +  echo "Copying ${MY_BRANCH} ${TARGET} files to ${OC_VOLUME_DIR}..."
-+  cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR}
++  cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR} || exit 1
 +fi
 +
 +# remove files we will rebuild
-+echo "Removing BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, CsrUtil.efi, AudioDxe.efi from ${OC_VOLUME_DIR}..."
++echo "Removing BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, CsrUtil.efi, AudioDxe.efi, OpenLinuxBoot.efi from ${OC_VOLUME_DIR}..."
 +rm ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/OpenCore.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenCanopy.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Tools/CsrUtil.efi
 +rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/AudioDxe.efi
++rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenLinuxBoot.efi
 +
 +if [ "$SKIP_BUILD" != "1" ]; then
 +  # rebuild them
 +  echo "Rebuilding..."
 +  cd ./UDK
-+  source edksetup.sh BaseTools
-+  build -a X64 -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc || exit -1
++  source edksetup.sh BaseTools || exit 1
++  build -a X64 -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc || exit 1
 +  cd ..
 +fi
 +
 +# put them back
-+echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, CsrUtil.efi, AudioDxe.efi to ${OC_VOLUME_DIR}..."
-+cp ${BUILD_DIR}/Bootstrap.efi ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
-+cp ${BUILD_DIR}/OpenCore.efi ${OC_VOLUME_DIR}/EFI/OC
-+cp ${BUILD_DIR}/OpenCanopy.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
-+cp ${BUILD_DIR}/Shell.efi ${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi
-+cp ${BUILD_DIR}/CsrUtil.efi ${OC_VOLUME_DIR}/EFI/OC/Tools
-+cp ${BUILD_DIR}/AudioDxe.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers
++echo "Copying ${MY_BRANCH} ${TARGET} BOOTx64.efi, OpenCore.efi, OpenCanopy.efi, OpenShell.efi, CsrUtil.efi, AudioDxe.efi, OpenLinuxBoot.efi to ${OC_VOLUME_DIR}..."
++cp ${BUILD_DIR}/Bootstrap.efi ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi || exit 1
++cp ${BUILD_DIR}/OpenCore.efi ${OC_VOLUME_DIR}/EFI/OC || exit 1
++cp ${BUILD_DIR}/OpenCanopy.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers || exit 1
++cp ${BUILD_DIR}/Shell.efi ${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi || exit 1
++cp ${BUILD_DIR}/CsrUtil.efi ${OC_VOLUME_DIR}/EFI/OC/Tools || exit 1
++cp ${BUILD_DIR}/AudioDxe.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers || exit 1
++cp ${BUILD_DIR}/OpenLinuxBoot.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers || exit 1
 +
 +# Mark binaries to be recognisable by OcBootManagementLib.
 +bootsig="./Library/OcBootManagementLib/BootSignature.bin"
