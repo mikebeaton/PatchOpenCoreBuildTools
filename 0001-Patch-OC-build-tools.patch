@@ -30,7 +30,7 @@ index 00000000..5379a3bf
 +#!/bin/bash
 +
 +TARGET="DEBUG"
-+OC_VER="0.7.2"
++OC_VER="0.7.3"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
@@ -130,7 +130,7 @@ index 00000000..a70552a3
 +#!/bin/bash
 +
 +TARGET="DEBUG"
-+OC_VER="0.7.2"
++OC_VER="0.7.3"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
