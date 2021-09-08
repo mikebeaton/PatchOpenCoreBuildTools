@@ -242,7 +242,7 @@ index 00000000..a70552a3
 +for efiOCBM in "${efiOCBMs[@]}"; do
 +  echo "Signing ${efiOCBM}..."
 +  dd if="${bootsig}" \
-+     of="${OC_VOLUME_DIR}${efiOCBM}" seek=64 bs=1 count=64 conv=notrunc || exit 1
++     of="${OC_VOLUME_DIR}${efiOCBM}" seek=64 bs=1 count=56 conv=notrunc || exit 1
 +done
 +
 +echo "Done."
