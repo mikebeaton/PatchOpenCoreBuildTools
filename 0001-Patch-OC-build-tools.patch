@@ -1,13 +1,13 @@
-From 37fecfac2ef634afd4774d2cb9fce348b79649f9 Mon Sep 17 00:00:00 2001
+From 7ebe37b32985bc1b00babeeb963c0d97f0a5f65a Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Sun, 15 Aug 2021 17:32:32 +0100
+Date: Wed, 8 Sep 2021 08:45:15 +0100
 Subject: [PATCH] Patch OC build tools
 
 ---
  kill_build.tool  |   3 ++
- rebuild_all.tool |  94 +++++++++++++++++++++++++++++++++++++
- rebuild_oc.tool  | 119 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 216 insertions(+)
+ rebuild_all.tool | 102 +++++++++++++++++++++++++++++++++++++
+ rebuild_oc.tool  | 127 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 232 insertions(+)
  create mode 100755 kill_build.tool
  create mode 100755 rebuild_all.tool
  create mode 100755 rebuild_oc.tool
@@ -23,14 +23,22 @@ index 00000000..02187e06
 +ps -a | grep build | grep -v "$0" | grep -v "grep" | awk '{print $1}' | xargs kill -9
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..5379a3bf
+index 00000000..a064ee20
 --- /dev/null
 +++ b/rebuild_all.tool
-@@ -0,0 +1,94 @@
+@@ -0,0 +1,102 @@
 +#!/bin/bash
 +
++read OC_VER <<< $(grep OPEN_CORE_VERSION\ *\"[0-9]\.[0-9]\.[0-9]\" Include/Acidanthera/Library/OcMainLib.h | cut -d \" -f 2)
++
++if [ "$OC_VER" == "" ]; then
++  echo "Cannot extract OC version"
++  exit -1
++fi
++
++echo "OpenCore $OC_VER"
++
 +TARGET="DEBUG"
-+OC_VER="0.7.3"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
@@ -123,14 +131,22 @@ index 00000000..5379a3bf
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..a70552a3
+index 00000000..009c3b53
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,127 @@
 +#!/bin/bash
 +
++read OC_VER <<< $(grep OPEN_CORE_VERSION\ *\"[0-9]\.[0-9]\.[0-9]\" Include/Acidanthera/Library/OcMainLib.h | cut -d \" -f 2)
++
++if [ "$OC_VER" == "" ]; then
++  echo "Cannot extract OC version"
++  exit -1
++fi
++
++echo "OpenCore $OC_VER"
++
 +TARGET="DEBUG"
-+OC_VER="0.7.3"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
