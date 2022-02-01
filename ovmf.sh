@@ -1,0 +1,1 @@
+./build.sh -a X64 qemu -cdrom /Users/mjsbeaton/QEMU/ubuntu-20.04.1-desktop-amd64.iso -drive format=raw,file=fat:rw:/Users/mjsbeaton/OPENCORE -drive format=raw,file=fat:rw:/Users/mjsbeaton/BOOTHELP -gdb tcp::8864 -serial stdio -usb -device usb-mouse -device usb-kbd -net none -audiodev coreaudio,id=audio0 -device ich9-intel-hda -device hda-output,audiodev=audio0

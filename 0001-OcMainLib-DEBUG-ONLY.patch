@@ -1,0 +1,26 @@
+From c9c09ae6888041c9357175122d7e2a401bbfa123 Mon Sep 17 00:00:00 2001
+From: MikeBeaton <mjsbeaton@gmail.com>
+Date: Tue, 1 Feb 2022 06:11:15 +0000
+Subject: [PATCH] OcMainLib: DEBUG ONLY
+
+---
+ Library/OcMainLib/OpenCoreUefi.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Library/OcMainLib/OpenCoreUefi.c b/Library/OcMainLib/OpenCoreUefi.c
+index 2dd959be..d856a5d8 100644
+--- a/Library/OcMainLib/OpenCoreUefi.c
++++ b/Library/OcMainLib/OpenCoreUefi.c
+@@ -937,6 +937,9 @@ OcLoadUefiSupport (
+ 
+     OcConnectDrivers ();
+     DEBUG ((DEBUG_INFO, "OC: Connecting drivers done...\n"));
++#if defined(OC_TARGET_NOOPT)
++    WaitForKeyPress (L"Mike...");
++#endif
+   } else {
+     OcLoadDrivers (Storage, Config, NULL);
+   }
+-- 
+2.31.1
+
