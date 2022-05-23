@@ -1,17 +1,17 @@
-From c9c09ae6888041c9357175122d7e2a401bbfa123 Mon Sep 17 00:00:00 2001
+From 2e2f1546d77514b4cb0c65c7637b4068ab9e232b Mon Sep 17 00:00:00 2001
 From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Tue, 1 Feb 2022 06:11:15 +0000
-Subject: [PATCH] OcMainLib: DEBUG ONLY
+Date: Mon, 23 May 2022 17:04:22 +0100
+Subject: [PATCH] OcMainLib DEBUG ONLY
 
 ---
  Library/OcMainLib/OpenCoreUefi.c | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/Library/OcMainLib/OpenCoreUefi.c b/Library/OcMainLib/OpenCoreUefi.c
-index 2dd959be..d856a5d8 100644
+index 8ba1a214..f3ced481 100644
 --- a/Library/OcMainLib/OpenCoreUefi.c
 +++ b/Library/OcMainLib/OpenCoreUefi.c
-@@ -937,6 +937,9 @@ OcLoadUefiSupport (
+@@ -970,6 +970,9 @@ OcLoadUefiSupport (
  
      OcConnectDrivers ();
      DEBUG ((DEBUG_INFO, "OC: Connecting drivers done...\n"));
@@ -19,7 +19,7 @@ index 2dd959be..d856a5d8 100644
 +    WaitForKeyPress (L"Mike...");
 +#endif
    } else {
-     OcLoadDrivers (Storage, Config, NULL);
+     OcLoadDrivers (Storage, Config, NULL, FALSE);
    }
 -- 
 2.31.1
