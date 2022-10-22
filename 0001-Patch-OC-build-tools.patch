@@ -1,13 +1,13 @@
-From 6feb5bb5480df3eba0a580fb3ff1251dee5f81cd Mon Sep 17 00:00:00 2001
-From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Mon, 27 Jun 2022 20:50:15 +0100
+From 3fb80e979eef0a63600a071725ea267bcd2aff5f Mon Sep 17 00:00:00 2001
+From: Mike Beaton <mjsbeaton@gmail.com>
+Date: Sat, 22 Oct 2022 16:55:40 +0100
 Subject: [PATCH] Patch OC build tools
 
 ---
- kill_build.tool  |   3 ++
- rebuild_all.tool | 102 ++++++++++++++++++++++++++++++++++++
- rebuild_oc.tool  | 131 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 236 insertions(+)
+ kill_build.tool  |   3 +
+ rebuild_all.tool | 102 +++++++++++++++++++++++++++++
+ rebuild_oc.tool  | 162 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 267 insertions(+)
  create mode 100755 kill_build.tool
  create mode 100755 rebuild_all.tool
  create mode 100755 rebuild_oc.tool
@@ -131,10 +131,10 @@ index 00000000..a064ee20
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..1162afbe
+index 00000000..12154dee
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,131 @@
+@@ -0,0 +1,162 @@
 +#!/bin/bash
 +
 +read OC_VER <<< $(grep OPEN_CORE_VERSION\ *\"[0-9]\.[0-9]\.[0-9]\" Include/Acidanthera/Library/OcMainLib.h | cut -d \" -f 2)
@@ -220,17 +220,39 @@ index 00000000..1162afbe
 +  cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR} || exit 1
 +fi
 +
-+# remove files we will rebuild
-+echo "Removing OpenCore.efi, OpenCanopy.efi, OpenShell.efi, AudioDxe.efi, OpenLinuxBoot.efi, ResetNvramEntry.efi, ToggleSipEntry.efi, OpenVariableRuntimeDxe.efi from ${OC_VOLUME_DIR}..."
-+#rm ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi
-+rm ${OC_VOLUME_DIR}/EFI/OC/OpenCore.efi
-+rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenCanopy.efi
-+rm ${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi
-+rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/AudioDxe.efi
-+rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenLinuxBoot.efi
-+rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/ResetNvramEntry.efi
-+rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/ToggleSipEntry.efi
-+rm ${OC_VOLUME_DIR}/EFI/OC/Drivers/OpenVariableRuntimeDxe.efi
++efiBases=(
++  "OpenCore.efi"
++)
++
++efiDrivers=(
++  "OpenCanopy.efi"
++  "AudioDxe.efi"
++  "OpenLinuxBoot.efi"
++  "ResetNvramEntry.efi"
++  "ToggleSipEntry.efi"
++  "OpenRuntime.efi"
++)
++
++efiTools=(
++  "OpenShell.efi"
++)
++
++# Remove files we will rebuild.
++echo "Removing from ${OC_VOLUME_DIR}..."
++
++for efiBase in "${efiBases[@]}"; do
++  echo "  ${efiBase}" && rm "${OC_VOLUME_DIR}/EFI/OC/${efiBase}"
++done
++
++for efiDriver in "${efiDrivers[@]}"; do
++  echo "  ${efiDriver}" && rm "${OC_VOLUME_DIR}/EFI/OC/Drivers/${efiDriver}"
++done
++
++for efiTool in "${efiTools[@]}"; do
++  echo "  ${efiTool}" && rm "${OC_VOLUME_DIR}/EFI/OC/Tools/${efiTool}"
++done
++
++echo "Done."
 +
 +if [ "$SKIP_BUILD" != "1" ]; then
 +  # rebuild them
@@ -242,16 +264,25 @@ index 00000000..1162afbe
 +fi
 +
 +# put them back
-+echo "Copying ${MY_BRANCH} ${TARGET} OpenCore.efi, OpenCanopy.efi, OpenShell.efi, AudioDxe.efi, OpenLinuxBoot.efi, ResetNvramEntry.efi, ToggleSipEntry.efi, OpenVariableRuntimeDxe.efi to ${OC_VOLUME_DIR}..."
-+#cp ${BUILD_DIR}/Bootstrap.efi ${OC_VOLUME_DIR}/EFI/BOOT/BOOTx64.efi || exit 1
-+cp ${BUILD_DIR}/OpenCore.efi ${OC_VOLUME_DIR}/EFI/OC || exit 1
-+cp ${BUILD_DIR}/OpenCanopy.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers || exit 1
-+cp ${BUILD_DIR}/Shell.efi ${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi || exit 1
-+cp ${BUILD_DIR}/AudioDxe.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers || exit 1
-+cp ${BUILD_DIR}/OpenLinuxBoot.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers || exit 1
-+cp ${BUILD_DIR}/ResetNvramEntry.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers || exit 1
-+cp ${BUILD_DIR}/ToggleSipEntry.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers || exit 1
-+cp ${BUILD_DIR}/OpenVariableRuntimeDxe.efi ${OC_VOLUME_DIR}/EFI/OC/Drivers || exit 1
++echo "Restoring to ${OC_VOLUME_DIR}..."
++
++for efiBase in "${efiBases[@]}"; do
++  echo "  ${efiBase}" && cp "${BUILD_DIR}/${efiBase}" "${OC_VOLUME_DIR}/EFI/OC/${efiBase}" || exit -1
++done
++
++for efiDriver in "${efiDrivers[@]}"; do
++  echo "  ${efiDriver}" && cp "${BUILD_DIR}/${efiBase}" "${OC_VOLUME_DIR}/EFI/OC/Drivers/${efiDriver}" || exit -1
++done
++
++for efiTool in "${efiTools[@]}"; do
++  echo "  ${efiTool}" && cp "${BUILD_DIR}/${efiBase}" "${OC_VOLUME_DIR}/EFI/OC/Tools/${efiTool}" || exit -1
++done
++
++echo "Done."
++
++if [ -f "${OC_VOLUME_DIR}/EFI/OC/Tools/Shell.efi" ]; then
++  mv "${OC_VOLUME_DIR}/EFI/OC/Tools/Shell.efi" "${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi" || exit -1
++fi
 +
 +# Mark binaries to be recognisable by OcBootManagementLib.
 +bootsig="./Library/OcBootManagementLib/BootSignature.bin"
@@ -267,5 +298,5 @@ index 00000000..1162afbe
 +
 +echo "Done."
 -- 
-2.31.1
+2.36.1
 
