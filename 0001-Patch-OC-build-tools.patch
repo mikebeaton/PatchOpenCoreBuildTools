@@ -1,13 +1,13 @@
-From 3fb80e979eef0a63600a071725ea267bcd2aff5f Mon Sep 17 00:00:00 2001
+From 321f0e79864d06e8c29066ed6150cd3145ff9e3e Mon Sep 17 00:00:00 2001
 From: Mike Beaton <mjsbeaton@gmail.com>
-Date: Sat, 22 Oct 2022 16:55:40 +0100
+Date: Sun, 23 Oct 2022 09:52:49 +0100
 Subject: [PATCH] Patch OC build tools
 
 ---
  kill_build.tool  |   3 +
- rebuild_all.tool | 102 +++++++++++++++++++++++++++++
- rebuild_oc.tool  | 162 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 267 insertions(+)
+ rebuild_all.tool | 102 ++++++++++++++++++++++++++++
+ rebuild_oc.tool  | 172 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 277 insertions(+)
  create mode 100755 kill_build.tool
  create mode 100755 rebuild_all.tool
  create mode 100755 rebuild_oc.tool
@@ -131,11 +131,51 @@ index 00000000..a064ee20
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..12154dee
+index 00000000..b21b28c7
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,172 @@
 +#!/bin/bash
++
++efiBaseFiles=(
++  "OpenCore.efi"
++)
++
++efiDrivers=(
++  "OpenCanopy.efi"
++  "AudioDxe.efi"
++  "OpenLinuxBoot.efi"
++  "ResetNvramEntry.efi"
++  "ToggleSipEntry.efi"
++  "OpenRuntime.efi"
++)
++
++efiTools=(
++  "OpenShell.efi"
++)
++
++remove_files() {
++  dir=$1
++  shift
++  arr=("$@")
++  for efiFile in "${arr[@]}"; do
++    #echo rm "${OC_VOLUME_DIR}/EFI/OC${dir}/${efiFile}"
++    rm "${OC_VOLUME_DIR}/EFI/OC${dir}/${efiFile}"
++  done
++}
++
++copy_files() {
++  dir=$1
++  shift
++  arr=("$@")
++  for efiFile in "${arr[@]}"; do
++    if [ "${efiFile}" = "OpenShell.efi" ]; then
++      efiFile="Shell.efi"
++    fi 
++    #echo cp "${BUILD_DIR}/${efiFile}" "${OC_VOLUME_DIR}/EFI/OC${dir}/${efiFile}"
++    cp "${BUILD_DIR}/${efiFile}" "${OC_VOLUME_DIR}/EFI/OC${dir}/${efiFile}" || exit -1
++  done
++}
 +
 +read OC_VER <<< $(grep OPEN_CORE_VERSION\ *\"[0-9]\.[0-9]\.[0-9]\" Include/Acidanthera/Library/OcMainLib.h | cut -d \" -f 2)
 +
@@ -220,39 +260,15 @@ index 00000000..12154dee
 +  cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR} || exit 1
 +fi
 +
-+efiBases=(
-+  "OpenCore.efi"
-+)
-+
-+efiDrivers=(
-+  "OpenCanopy.efi"
-+  "AudioDxe.efi"
-+  "OpenLinuxBoot.efi"
-+  "ResetNvramEntry.efi"
-+  "ToggleSipEntry.efi"
-+  "OpenRuntime.efi"
-+)
-+
-+efiTools=(
-+  "OpenShell.efi"
-+)
-+
 +# Remove files we will rebuild.
-+echo "Removing from ${OC_VOLUME_DIR}..."
++printf 'Removing %s' "${efiBaseFiles[@]}"
++printf ', %s' "${efiDrivers[@]}"
++printf ', %s' "${efiTools[@]}"
++printf " from ${OC_VOLUME_DIR}...\n"
 +
-+for efiBase in "${efiBases[@]}"; do
-+  echo "  ${efiBase}" && rm "${OC_VOLUME_DIR}/EFI/OC/${efiBase}"
-+done
-+
-+for efiDriver in "${efiDrivers[@]}"; do
-+  echo "  ${efiDriver}" && rm "${OC_VOLUME_DIR}/EFI/OC/Drivers/${efiDriver}"
-+done
-+
-+for efiTool in "${efiTools[@]}"; do
-+  echo "  ${efiTool}" && rm "${OC_VOLUME_DIR}/EFI/OC/Tools/${efiTool}"
-+done
-+
-+echo "Done."
++remove_files '' ${efiBaseFiles[@]}
++remove_files '/Drivers' ${efiDrivers[@]}
++remove_files '/Tools' ${efiTools[@]}
 +
 +if [ "$SKIP_BUILD" != "1" ]; then
 +  # rebuild them
@@ -264,21 +280,15 @@ index 00000000..12154dee
 +fi
 +
 +# put them back
-+echo "Restoring to ${OC_VOLUME_DIR}..."
++printf "Copying ${MY_BRANCH} ${TARGET} "
++printf '%s' "${efiBaseFiles[@]}"
++printf ', %s' "${efiDrivers[@]}"
++printf ', %s' "${efiTools[@]}"
++printf " to ${OC_VOLUME_DIR}...\n"
 +
-+for efiBase in "${efiBases[@]}"; do
-+  echo "  ${efiBase}" && cp "${BUILD_DIR}/${efiBase}" "${OC_VOLUME_DIR}/EFI/OC/${efiBase}" || exit -1
-+done
-+
-+for efiDriver in "${efiDrivers[@]}"; do
-+  echo "  ${efiDriver}" && cp "${BUILD_DIR}/${efiBase}" "${OC_VOLUME_DIR}/EFI/OC/Drivers/${efiDriver}" || exit -1
-+done
-+
-+for efiTool in "${efiTools[@]}"; do
-+  echo "  ${efiTool}" && cp "${BUILD_DIR}/${efiBase}" "${OC_VOLUME_DIR}/EFI/OC/Tools/${efiTool}" || exit -1
-+done
-+
-+echo "Done."
++copy_files '' ${efiBaseFiles[@]}
++copy_files '/Drivers' ${efiDrivers[@]}
++copy_files '/Tools' ${efiTools[@]}
 +
 +if [ -f "${OC_VOLUME_DIR}/EFI/OC/Tools/Shell.efi" ]; then
 +  mv "${OC_VOLUME_DIR}/EFI/OC/Tools/Shell.efi" "${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi" || exit -1
