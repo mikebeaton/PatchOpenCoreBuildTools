@@ -1,26 +1,28 @@
-From 2e2f1546d77514b4cb0c65c7637b4068ab9e232b Mon Sep 17 00:00:00 2001
-From: MikeBeaton <mjsbeaton@gmail.com>
-Date: Mon, 23 May 2022 17:04:22 +0100
-Subject: [PATCH] OcMainLib DEBUG ONLY
+From d486eefff142523c16837ec9863366afa1643143 Mon Sep 17 00:00:00 2001
+From: Mike Beaton <mjsbeaton@gmail.com>
+Date: Sun, 30 Oct 2022 07:51:52 +0000
+Subject: [PATCH] mike
 
 ---
- Library/OcMainLib/OpenCoreUefi.c | 3 +++
- 1 file changed, 3 insertions(+)
+ Library/OcMainLib/OpenCoreUefi.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/Library/OcMainLib/OpenCoreUefi.c b/Library/OcMainLib/OpenCoreUefi.c
-index 8ba1a214..f3ced481 100644
+index 5f0c503e..10a2fca2 100644
 --- a/Library/OcMainLib/OpenCoreUefi.c
 +++ b/Library/OcMainLib/OpenCoreUefi.c
-@@ -970,6 +970,9 @@ OcLoadUefiSupport (
+@@ -254,6 +254,11 @@ OcLoadDrivers (
+       FreePool ((CHAR8 *)UnescapedArguments);
+     }
  
-     OcConnectDrivers ();
-     DEBUG ((DEBUG_INFO, "OC: Connecting drivers done...\n"));
 +#if defined(OC_TARGET_NOOPT)
-+    WaitForKeyPress (L"Mike...");
++    if (Index == 0) {
++      WaitForKeyPress (L"Mike...");
++    }
 +#endif
-   } else {
-     OcLoadDrivers (Storage, Config, NULL, FALSE);
-   }
+     Status = gBS->StartImage (
+                     ImageHandle,
+                     NULL,
 -- 
-2.31.1
+2.36.1
 
