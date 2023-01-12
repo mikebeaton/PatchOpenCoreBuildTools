@@ -1,17 +1,53 @@
-From 321f0e79864d06e8c29066ed6150cd3145ff9e3e Mon Sep 17 00:00:00 2001
+From fd240fa6034e58495eb64bb9945ca17caf4b840f Mon Sep 17 00:00:00 2001
 From: Mike Beaton <mjsbeaton@gmail.com>
-Date: Sun, 23 Oct 2022 09:52:49 +0100
+Date: Thu, 12 Jan 2023 07:26:33 +0000
 Subject: [PATCH] Patch OC build tools
 
 ---
- kill_build.tool  |   3 +
- rebuild_all.tool | 102 ++++++++++++++++++++++++++++
- rebuild_oc.tool  | 172 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 277 insertions(+)
+ inject.sh         |  26 ++++++++
+ kill_build.tool   |   3 +
+ rebuild_all.tool  | 102 +++++++++++++++++++++++++++++
+ rebuild_duet.tool |  16 +++++
+ rebuild_oc.tool   | 163 ++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 310 insertions(+)
+ create mode 100755 inject.sh
  create mode 100755 kill_build.tool
  create mode 100755 rebuild_all.tool
+ create mode 100755 rebuild_duet.tool
  create mode 100755 rebuild_oc.tool
 
+diff --git a/inject.sh b/inject.sh
+new file mode 100755
+index 00000000..ec40b326
+--- /dev/null
++++ b/inject.sh
+@@ -0,0 +1,26 @@
++#!/bin/sh
++
++echo $ cd ~/injected
++pushd ~/injected 1>/dev/null || exit 1
++
++echo cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGop/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGop.ffs
++cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGop/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGop.ffs || exit 1
++
++echo cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGopDirect/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGopDirect.ffs
++cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGopDirect/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGopDirect.ffs || exit 1
++
++echo $ ~/Tools/DXEInject CK9200GC8PZ\ -\ reconstructed.144.base_21.VSS.rom injected.rom EnableGop.ffs
++~/Tools/DXEInject CK9200GC8PZ\ -\ reconstructed.144.base_21.VSS.rom injected.rom EnableGop.ffs || exit 1
++
++echo $ ~/Tools/DXEInject CK9200GC8PZ\ -\ reconstructed.144.base_21.VSS.rom injected_direct.rom EnableGopDirect.ffs
++~/Tools/DXEInject CK9200GC8PZ\ -\ reconstructed.144.base_21.VSS.rom injected_direct.rom EnableGopDirect.ffs || exit 1
++
++echo $ cp injected.rom ~/Public
++cp injected.rom ~/Public || exit 1
++
++echo $ cp injected_direct.rom ~/Public
++cp injected_direct.rom ~/Public || exit 1
++
++popd 1>/dev/null || exit 1
++
++ls -alrt ~/Public/injected*.rom
 diff --git a/kill_build.tool b/kill_build.tool
 new file mode 100755
 index 00000000..02187e06
@@ -129,12 +165,34 @@ index 00000000..a064ee20
 +cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR} || exit 1
 +
 +echo "Done."
+diff --git a/rebuild_duet.tool b/rebuild_duet.tool
+new file mode 100755
+index 00000000..cf69441d
+--- /dev/null
++++ b/rebuild_duet.tool
+@@ -0,0 +1,16 @@
++#!/bin/bash
++
++TARGET="DEBUG"
++
++if [ "$1" != "" ]; then
++  TARGET=$1
++fi
++
++echo "Rebuilding..."
++ARCHS=(X64)
++TARGETS=(${TARGET})
++pushd .
++source ./build_duet.tool --skip-tests || exit 1
++popd 1>/dev/null
++
++echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..b21b28c7
+index 00000000..31a4a10b
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,172 @@
+@@ -0,0 +1,163 @@
 +#!/bin/bash
 +
 +efiBaseFiles=(
@@ -144,6 +202,8 @@ index 00000000..b21b28c7
 +efiDrivers=(
 +  "OpenCanopy.efi"
 +  "AudioDxe.efi"
++  "EnableGop.efi"
++  "EnableGopDirect.efi"
 +  "OpenLinuxBoot.efi"
 +  "ResetNvramEntry.efi"
 +  "ToggleSipEntry.efi"
@@ -152,6 +212,7 @@ index 00000000..b21b28c7
 +
 +efiTools=(
 +  "OpenShell.efi"
++  "BootKicker.efi"
 +)
 +
 +remove_files() {
@@ -293,18 +354,6 @@ index 00000000..b21b28c7
 +if [ -f "${OC_VOLUME_DIR}/EFI/OC/Tools/Shell.efi" ]; then
 +  mv "${OC_VOLUME_DIR}/EFI/OC/Tools/Shell.efi" "${OC_VOLUME_DIR}/EFI/OC/Tools/OpenShell.efi" || exit -1
 +fi
-+
-+# Mark binaries to be recognisable by OcBootManagementLib.
-+bootsig="./Library/OcBootManagementLib/BootSignature.bin"
-+efiOCBMs=(
-+#  "/EFI/BOOT/BOOTx64.efi"
-+  "/EFI/OC/OpenCore.efi"
-+  )
-+for efiOCBM in "${efiOCBMs[@]}"; do
-+  echo "Signing ${efiOCBM}..."
-+  dd if="${bootsig}" \
-+     of="${OC_VOLUME_DIR}${efiOCBM}" seek=64 bs=1 count=56 conv=notrunc || exit 1
-+done
 +
 +echo "Done."
 -- 
