@@ -1,37 +1,51 @@
-From fd240fa6034e58495eb64bb9945ca17caf4b840f Mon Sep 17 00:00:00 2001
+From 4e4e849d69f0e4200f0831bc1099b8ea04ffd330 Mon Sep 17 00:00:00 2001
 From: Mike Beaton <mjsbeaton@gmail.com>
-Date: Thu, 12 Jan 2023 07:26:33 +0000
+Date: Sun, 12 Feb 2023 14:36:38 +0000
 Subject: [PATCH] Patch OC build tools
 
 ---
- inject.sh         |  26 ++++++++
+ gop_inject.sh     |   4 ++
+ inject.sh         |  28 ++++++++
  kill_build.tool   |   3 +
- rebuild_all.tool  | 102 +++++++++++++++++++++++++++++
- rebuild_duet.tool |  16 +++++
- rebuild_oc.tool   | 163 ++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 310 insertions(+)
+ rebuild_all.tool  | 109 ++++++++++++++++++++++++++++++
+ rebuild_duet.tool |  23 +++++++
+ rebuild_oc.tool   | 168 ++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 335 insertions(+)
+ create mode 100755 gop_inject.sh
  create mode 100755 inject.sh
  create mode 100755 kill_build.tool
  create mode 100755 rebuild_all.tool
  create mode 100755 rebuild_duet.tool
  create mode 100755 rebuild_oc.tool
 
+diff --git a/gop_inject.sh b/gop_inject.sh
+new file mode 100755
+index 00000000..aef2396a
+--- /dev/null
++++ b/gop_inject.sh
+@@ -0,0 +1,4 @@
++#!/bin/sh
++#~/OpenSource/OpenCorePkg/Staging/EnableGop/NvInsertEfi.sh ~/OpenSource/Firmware/MP41_MP51/GT710/GT710.rom ~/OPENCORE/EFI/OC/Drivers/FirmwareUnlock.efi 0xFC00 new.rom
++~/OpenSource/OpenCorePkg/Staging/EnableGop/NvInsertEfi.sh ~/OpenSource/Firmware/MP41_MP51/GT710/GT710.rom ~/OPENCORE/EFI/OC/Drivers/EnableGop.efi 0xFC00 new.rom
++#~/OpenSource/OpenCorePkg/Staging/EnableGop/NvInsertEfi.sh temp.rom ~/OPENCORE/EFI/OC/Drivers/FirmwareUnlock.efi 0xFC00 new.rom
 diff --git a/inject.sh b/inject.sh
 new file mode 100755
-index 00000000..ec40b326
+index 00000000..fe5752b5
 --- /dev/null
 +++ b/inject.sh
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,28 @@
 +#!/bin/sh
 +
 +echo $ cd ~/injected
 +pushd ~/injected 1>/dev/null || exit 1
 +
-+echo cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGop/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGop.ffs
-+cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGop/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGop.ffs || exit 1
++if [ "$1" != "-n" ] ; then
++  echo cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGop/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGop.ffs
++  cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGop/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGop.ffs || exit 1
 +
-+echo cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGopDirect/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGopDirect.ffs
-+cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGopDirect/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGopDirect.ffs || exit 1
++  echo cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGopDirect/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGopDirect.ffs
++  cp ~/OpenSource/OpenCorePkg/UDK/Build/OpenCorePkg/RELEASE_XCODE5/FV/Ffs/3FBA58B1-F8C0-41BC-ACD8-253043A3A17FEnableGopDirect/3FBA58B1-F8C0-41BC-ACD8-253043A3A17F.ffs EnableGopDirect.ffs || exit 1
++fi
 +
 +echo $ ~/Tools/DXEInject CK9200GC8PZ\ -\ reconstructed.144.base_21.VSS.rom injected.rom EnableGop.ffs
 +~/Tools/DXEInject CK9200GC8PZ\ -\ reconstructed.144.base_21.VSS.rom injected.rom EnableGop.ffs || exit 1
@@ -59,10 +73,10 @@ index 00000000..02187e06
 +ps -a | grep build | grep -v "$0" | grep -v "grep" | awk '{print $1}' | xargs kill -9
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..a064ee20
+index 00000000..48fe6a7a
 --- /dev/null
 +++ b/rebuild_all.tool
-@@ -0,0 +1,102 @@
+@@ -0,0 +1,109 @@
 +#!/bin/bash
 +
 +read OC_VER <<< $(grep OPEN_CORE_VERSION\ *\"[0-9]\.[0-9]\.[0-9]\" Include/Acidanthera/Library/OcMainLib.h | cut -d \" -f 2)
@@ -75,6 +89,7 @@ index 00000000..a064ee20
 +echo "OpenCore $OC_VER"
 +
 +TARGET="DEBUG"
++ARCH="X64"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
@@ -106,6 +121,12 @@ index 00000000..a064ee20
 +
 +if [ "$1" != "" ]; then
 +  TARGET=$1
++  shift
++fi
++
++if [ "$1" != "" ]; then
++  ARCH=$1
++  shift
 +fi
 +
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
@@ -118,7 +139,7 @@ index 00000000..a064ee20
 +  fi
 +fi
 +
-+BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
++BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/${ARCH}"
 +
 +BASE=OpenCore-${OC_VER}-${TARGET}
 +VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
@@ -134,7 +155,7 @@ index 00000000..a064ee20
 +  fi
 +
 +  echo "Rebuilding..."
-+  ARCHS=(X64)
++  ARCHS=(${ARCH})
 +  TARGETS=(${TARGET})
 +  pushd .
 +  source ./build_oc.tool --skip-tests || exit 1
@@ -162,25 +183,32 @@ index 00000000..a064ee20
 +unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null || exit 1
 +
 +echo "Copying ${MY_BRANCH} ${TARGET} files to ${OC_VOLUME_DIR}..."
-+cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR} || exit 1
++cp -r ${UNZIP_DIR}/${ARCH}/EFI ${OC_VOLUME_DIR} || exit 1
 +
 +echo "Done."
 diff --git a/rebuild_duet.tool b/rebuild_duet.tool
 new file mode 100755
-index 00000000..cf69441d
+index 00000000..0acbd485
 --- /dev/null
 +++ b/rebuild_duet.tool
-@@ -0,0 +1,16 @@
+@@ -0,0 +1,23 @@
 +#!/bin/bash
 +
 +TARGET="DEBUG"
++ARCH="X64"
 +
 +if [ "$1" != "" ]; then
 +  TARGET=$1
++  shift
++fi
++
++if [ "$1" != "" ]; then
++  ARCH=$1
++  shift
 +fi
 +
 +echo "Rebuilding..."
-+ARCHS=(X64)
++ARCHS=(${ARCH})
 +TARGETS=(${TARGET})
 +pushd .
 +source ./build_duet.tool --skip-tests || exit 1
@@ -189,10 +217,10 @@ index 00000000..cf69441d
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..31a4a10b
+index 00000000..2aee9e55
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,163 @@
+@@ -0,0 +1,168 @@
 +#!/bin/bash
 +
 +efiBaseFiles=(
@@ -202,8 +230,6 @@ index 00000000..31a4a10b
 +efiDrivers=(
 +  "OpenCanopy.efi"
 +  "AudioDxe.efi"
-+  "EnableGop.efi"
-+  "EnableGopDirect.efi"
 +  "OpenLinuxBoot.efi"
 +  "ResetNvramEntry.efi"
 +  "ToggleSipEntry.efi"
@@ -248,6 +274,7 @@ index 00000000..31a4a10b
 +echo "OpenCore $OC_VER"
 +
 +TARGET="DEBUG"
++ARCH="X64"
 +OC_VOLUME_DIR=/Volumes/OPENCORE
 +
 +SKIP_BUILD=0
@@ -279,6 +306,12 @@ index 00000000..31a4a10b
 +
 +if [ "$1" != "" ]; then
 +  TARGET=$1
++  shift
++fi
++
++if [ "$1" != "" ]; then
++  ARCH=$1
++  shift
 +fi
 +
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
@@ -291,7 +324,7 @@ index 00000000..31a4a10b
 +  fi
 +fi
 +
-+BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/X64"
++BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/${ARCH}"
 +
 +BASE=OpenCore-${OC_VER}-${TARGET}
 +VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
@@ -318,7 +351,7 @@ index 00000000..31a4a10b
 +  unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null || exit 1
 +
 +  echo "Copying ${MY_BRANCH} ${TARGET} files to ${OC_VOLUME_DIR}..."
-+  cp -r ${UNZIP_DIR}/X64/EFI ${OC_VOLUME_DIR} || exit 1
++  cp -r ${UNZIP_DIR}/${ARCH}/EFI ${OC_VOLUME_DIR} || exit 1
 +fi
 +
 +# Remove files we will rebuild.
@@ -336,7 +369,7 @@ index 00000000..31a4a10b
 +  echo "Rebuilding..."
 +  cd ./UDK
 +  source edksetup.sh BaseTools || exit 1
-+  build -a X64 -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc || exit 1
++  build -a ${ARCH} -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc || exit 1
 +  cd ..
 +fi
 +
@@ -357,5 +390,5 @@ index 00000000..31a4a10b
 +
 +echo "Done."
 -- 
-2.36.1
+2.37.5
 
