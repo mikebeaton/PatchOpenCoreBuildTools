@@ -1,16 +1,16 @@
-From e86deb677aa610709d29af49afdedd51c15fcdf9 Mon Sep 17 00:00:00 2001
+From c719bf3e05cd215185614e113ab1dfe4e30c477f Mon Sep 17 00:00:00 2001
 From: Mike Beaton <mjsbeaton@gmail.com>
-Date: Tue, 31 Oct 2023 13:16:52 +0000
-Subject: [PATCH] Patch-OC-build-tools
+Date: Tue, 31 Oct 2023 13:41:38 +0000
+Subject: [PATCH] Patch OC build tools
 
 ---
  gop_inject.sh     |   4 ++
  inject.sh         |  28 ++++++++
  kill_build.tool   |   3 +
- rebuild_all.tool  | 116 +++++++++++++++++++++++++++++++
+ rebuild_all.tool  | 117 +++++++++++++++++++++++++++++++
  rebuild_duet.tool |  25 +++++++
- rebuild_oc.tool   | 174 ++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 350 insertions(+)
+ rebuild_oc.tool   | 175 ++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 352 insertions(+)
  create mode 100755 gop_inject.sh
  create mode 100755 inject.sh
  create mode 100755 kill_build.tool
@@ -73,10 +73,10 @@ index 00000000..02187e06
 +ps -a | grep build | grep -v "$0" | grep -v "grep" | awk '{print $1}' | xargs kill -9
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..2f8a7b09
+index 00000000..443b4a22
 --- /dev/null
 +++ b/rebuild_all.tool
-@@ -0,0 +1,116 @@
+@@ -0,0 +1,117 @@
 +#!/bin/bash
 +
 +read OC_VER <<< $(grep OPEN_CORE_VERSION\ *\"[0-9]\.[0-9]\.[0-9]\" Include/Acidanthera/Library/OcMainLib.h | cut -d \" -f 2)
@@ -147,10 +147,11 @@ index 00000000..2f8a7b09
 +
 +BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_${TOOLCHAIN}/${ARCH}"
 +
-+BASE=OpenCore-${OC_VER}-${TARGET}-${ARCH}-${TOOLCHAIN}
-+VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
-+ZIP_FILE=~/OC/${BASE}.zip
-+UNZIP_DIR=~/OC/${BASE}
++BASE=OpenCore-${OC_VER}-${TARGET}
++ZIP_BASE=${BASE}-${ARCH}-${TOOLCHAIN}
++VER_ZIP_FILE=~/OC/${ZIP_BASE}-${MY_BRANCH}.zip
++ZIP_FILE=~/OC/${ZIP_BASE}.zip
++UNZIP_DIR=~/OC/${ZIP_BASE}
 +
 +if [ "$SKIP_BUILD" != "1" ]; then
 +  if [ -f "${BUILD_DIR}/${BASE}.zip" ]; then
@@ -186,10 +187,10 @@ index 00000000..2f8a7b09
 +echo "Copying ${TARGET} zip to ${BASE}-${MY_BRANCH}.zip..."
 +cp ${ZIP_FILE} ${VER_ZIP_FILE} || exit 1
 +
-+echo "Unzipping ${BASE}.zip..."
++echo "Unzipping ${ZIP_BASE}.zip..."
 +unzip ${ZIP_FILE} -d ${UNZIP_DIR} 1>/dev/null || exit 1
 +
-+echo "Copying ${MY_BRANCH} ${TARGET} files to ${OC_VOLUME_DIR}..."
++echo "Copying ${MY_BRANCH} ${TARGET} ${ARCH} ${TOOLCHAIN} files to ${OC_VOLUME_DIR}..."
 +cp -r ${UNZIP_DIR}/${ARCH}/EFI ${OC_VOLUME_DIR} || exit 1
 +
 +echo "Done."
@@ -226,10 +227,10 @@ index 00000000..2bd28d18
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..577e44eb
+index 00000000..828c737e
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,174 @@
+@@ -0,0 +1,175 @@
 +#!/bin/bash
 +
 +efiBaseFiles=(
@@ -341,10 +342,11 @@ index 00000000..577e44eb
 +
 +BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_${TOOLCHAIN}/${ARCH}"
 +
-+BASE=OpenCore-${OC_VER}-${TARGET}-${ARCH}-${TOOLCHAIN}
-+VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
-+ZIP_FILE=~/OC/${BASE}.zip
-+UNZIP_DIR=~/OC/${BASE}
++BASE=OpenCore-${OC_VER}-${TARGET}
++ZIP_BASE=${BASE}-${ARCH}-${TOOLCHAIN}
++VER_ZIP_FILE=~/OC/${ZIP_BASE}-${MY_BRANCH}.zip
++ZIP_FILE=~/OC/${ZIP_BASE}.zip
++UNZIP_DIR=~/OC/${ZIP_BASE}
 +
 +if [ ! -f $VER_ZIP_FILE ]; then
 +  echo "Cannot find ${VER_ZIP_FILE}, using 'rebuild_all -s' ..."
@@ -389,7 +391,7 @@ index 00000000..577e44eb
 +fi
 +
 +# put them back
-+printf "Copying ${MY_BRANCH} ${TARGET} "
++printf "Copying ${MY_BRANCH} ${TARGET} ${ARCH} ${TOOLCHAIN} "
 +printf '%s' "${efiBaseFiles[@]}"
 +printf ', %s' "${efiDrivers[@]}"
 +printf ', %s' "${efiTools[@]}"
