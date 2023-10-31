@@ -1,16 +1,16 @@
-From 4e4e849d69f0e4200f0831bc1099b8ea04ffd330 Mon Sep 17 00:00:00 2001
+From e86deb677aa610709d29af49afdedd51c15fcdf9 Mon Sep 17 00:00:00 2001
 From: Mike Beaton <mjsbeaton@gmail.com>
-Date: Sun, 12 Feb 2023 14:36:38 +0000
-Subject: [PATCH] Patch OC build tools
+Date: Tue, 31 Oct 2023 13:16:52 +0000
+Subject: [PATCH] Patch-OC-build-tools
 
 ---
  gop_inject.sh     |   4 ++
  inject.sh         |  28 ++++++++
  kill_build.tool   |   3 +
- rebuild_all.tool  | 109 ++++++++++++++++++++++++++++++
- rebuild_duet.tool |  23 +++++++
- rebuild_oc.tool   | 168 ++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 335 insertions(+)
+ rebuild_all.tool  | 116 +++++++++++++++++++++++++++++++
+ rebuild_duet.tool |  25 +++++++
+ rebuild_oc.tool   | 174 ++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 350 insertions(+)
  create mode 100755 gop_inject.sh
  create mode 100755 inject.sh
  create mode 100755 kill_build.tool
@@ -73,10 +73,10 @@ index 00000000..02187e06
 +ps -a | grep build | grep -v "$0" | grep -v "grep" | awk '{print $1}' | xargs kill -9
 diff --git a/rebuild_all.tool b/rebuild_all.tool
 new file mode 100755
-index 00000000..48fe6a7a
+index 00000000..2f8a7b09
 --- /dev/null
 +++ b/rebuild_all.tool
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,116 @@
 +#!/bin/bash
 +
 +read OC_VER <<< $(grep OPEN_CORE_VERSION\ *\"[0-9]\.[0-9]\.[0-9]\" Include/Acidanthera/Library/OcMainLib.h | cut -d \" -f 2)
@@ -90,7 +90,8 @@ index 00000000..48fe6a7a
 +
 +TARGET="DEBUG"
 +ARCH="X64"
-+OC_VOLUME_DIR=/Volumes/OPENCORE
++TOOLCHAIN="XCODE5"
++OC_VOLUME_DIR=~/OPENCORE
 +
 +SKIP_BUILD=0
 +
@@ -129,6 +130,11 @@ index 00000000..48fe6a7a
 +  shift
 +fi
 +
++if [ "$1" != "" ]; then
++  TOOLCHAIN=$1
++  shift
++fi
++
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
 +if [ "$MY_BRANCH" = "" ]; then
@@ -139,9 +145,9 @@ index 00000000..48fe6a7a
 +  fi
 +fi
 +
-+BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/${ARCH}"
++BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_${TOOLCHAIN}/${ARCH}"
 +
-+BASE=OpenCore-${OC_VER}-${TARGET}
++BASE=OpenCore-${OC_VER}-${TARGET}-${ARCH}-${TOOLCHAIN}
 +VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
 +ZIP_FILE=~/OC/${BASE}.zip
 +UNZIP_DIR=~/OC/${BASE}
@@ -157,6 +163,7 @@ index 00000000..48fe6a7a
 +  echo "Rebuilding..."
 +  ARCHS=(${ARCH})
 +  TARGETS=(${TARGET})
++  TOOLCHAINS=(${TOOLCHAIN})
 +  pushd .
 +  source ./build_oc.tool --skip-tests || exit 1
 +  popd 1>/dev/null
@@ -188,14 +195,15 @@ index 00000000..48fe6a7a
 +echo "Done."
 diff --git a/rebuild_duet.tool b/rebuild_duet.tool
 new file mode 100755
-index 00000000..0acbd485
+index 00000000..2bd28d18
 --- /dev/null
 +++ b/rebuild_duet.tool
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,25 @@
 +#!/bin/bash
 +
 +TARGET="DEBUG"
 +ARCH="X64"
++TOOLCHAIN="XCODE5"
 +
 +if [ "$1" != "" ]; then
 +  TARGET=$1
@@ -210,6 +218,7 @@ index 00000000..0acbd485
 +echo "Rebuilding..."
 +ARCHS=(${ARCH})
 +TARGETS=(${TARGET})
++TOOLCHAINS=(${TOOLCHAIN})
 +pushd .
 +source ./build_duet.tool --skip-tests || exit 1
 +popd 1>/dev/null
@@ -217,10 +226,10 @@ index 00000000..0acbd485
 +echo "Done."
 diff --git a/rebuild_oc.tool b/rebuild_oc.tool
 new file mode 100755
-index 00000000..2aee9e55
+index 00000000..577e44eb
 --- /dev/null
 +++ b/rebuild_oc.tool
-@@ -0,0 +1,168 @@
+@@ -0,0 +1,174 @@
 +#!/bin/bash
 +
 +efiBaseFiles=(
@@ -275,7 +284,8 @@ index 00000000..2aee9e55
 +
 +TARGET="DEBUG"
 +ARCH="X64"
-+OC_VOLUME_DIR=/Volumes/OPENCORE
++TOOLCHAIN="XCODE5"
++OC_VOLUME_DIR=~/OPENCORE
 +
 +SKIP_BUILD=0
 +
@@ -314,6 +324,11 @@ index 00000000..2aee9e55
 +  shift
 +fi
 +
++if [ "$1" != "" ]; then
++  TOOLCHAIN=$1
++  shift
++fi
++
 +eval "$(git status | grep "On branch" | awk -F '[ ]' '{print "MY_BRANCH=" $3}')"
 +
 +if [ "$MY_BRANCH" = "" ]; then
@@ -324,9 +339,9 @@ index 00000000..2aee9e55
 +  fi
 +fi
 +
-+BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_XCODE5/${ARCH}"
++BUILD_DIR="./UDK/Build/OpenCorePkg/${TARGET}_${TOOLCHAIN}/${ARCH}"
 +
-+BASE=OpenCore-${OC_VER}-${TARGET}
++BASE=OpenCore-${OC_VER}-${TARGET}-${ARCH}-${TOOLCHAIN}
 +VER_ZIP_FILE=~/OC/${BASE}-${MY_BRANCH}.zip
 +ZIP_FILE=~/OC/${BASE}.zip
 +UNZIP_DIR=~/OC/${BASE}
@@ -369,7 +384,7 @@ index 00000000..2aee9e55
 +  echo "Rebuilding..."
 +  cd ./UDK
 +  source edksetup.sh BaseTools || exit 1
-+  build -a ${ARCH} -b ${TARGET} -t XCODE5 -p OpenCorePkg/OpenCorePkg.dsc || exit 1
++  build -a ${ARCH} -b ${TARGET} -t ${TOOLCHAIN} -p OpenCorePkg/OpenCorePkg.dsc || exit 1
 +  cd ..
 +fi
 +
