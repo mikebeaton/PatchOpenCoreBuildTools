@@ -1,0 +1,26 @@
+From f60ae5c5fc7a362788a7211f89a4f48f46df7e4b Mon Sep 17 00:00:00 2001
+From: Mike Beaton <mjsbeaton@gmail.com>
+Date: Fri, 8 Dec 2023 20:52:55 +0000
+Subject: [PATCH] OpenCore: Wait on start - DEBUG ONLY
+
+---
+ Application/OpenCore/OpenCore.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Application/OpenCore/OpenCore.c b/Application/OpenCore/OpenCore.c
+index aec4f7395..643384d0c 100644
+--- a/Application/OpenCore/OpenCore.c
++++ b/Application/OpenCore/OpenCore.c
+@@ -290,6 +290,9 @@ UefiMain (
+   EFI_DEVICE_PATH_PROTOCOL         *AbsPath;
+ 
+   DEBUG ((DEBUG_INFO, "OC: Starting OpenCore...\n"));
++#if defined(OC_TARGET_NOOPT)
++  WaitForKeyPress (L"Mike...");
++#endif
+ 
+   //
+   // We have just started by bootstrap or manually at EFI/OC/OpenCore.efi.
+-- 
+2.37.5
+
